@@ -24,11 +24,23 @@ source scripts/lib/read-pipeline-project.sh && pp_print_context
 
 ### 对外展示站
 
+**线上（GitHub Pages）**：https://yangliulang.github.io/agent-workflow/
+
+**本地**：
+
 ```bash
 cd apps/web && npm install && npm run dev
 ```
 
-浏览器打开 `http://localhost:5173` — 介绍方案架构、流水线阶段、四步上手与 Skill 速查（参考 [ChainUp Agent 落地页](https://agent.dw2nn.com/zh-CN) 信息结构）。
+浏览器打开 `http://localhost:5173` — 介绍方案架构、流水线阶段、四步上手与 Skill 速查。
+
+#### 首次启用 GitHub Pages
+
+1. 打开仓库 **Settings → Pages**
+2. **Build and deployment → Source** 选 **GitHub Actions**（不要选 Deploy from branch）
+3. 推送 `main` 后工作流 [deploy-web-pages.yml](.github/workflows/deploy-web-pages.yml) 会自动构建 `apps/web` 并发布
+
+若 Pages 显示 404，确认 Settings 里 Source 为 **GitHub Actions**，并查看 Actions 是否绿色通过。
 
 ### 日常开发
 
