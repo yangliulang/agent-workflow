@@ -39,7 +39,7 @@ function SiteNav() {
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-surface-elevated)]/95 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="flex items-center justify-between gap-3 py-3">
+        <div className="flex items-center justify-between gap-3 py-3 md:gap-4">
           <a
             href="#"
             className="flex min-w-0 items-center gap-2 font-semibold tracking-tight text-[var(--color-ink)]"
@@ -49,20 +49,33 @@ function SiteNav() {
             </span>
             <span className="truncate text-sm sm:text-base">Agent Pipeline</span>
           </a>
+
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-4 text-sm text-[var(--color-muted)] md:flex lg:gap-6">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="whitespace-nowrap transition-colors hover:text-[var(--color-ink)]"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
           <a
             href="#bind"
-            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-ink)] px-3 py-1.5 text-xs font-medium text-white sm:px-4 sm:py-2 sm:text-sm"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-ink)] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800 active:scale-[0.98] sm:px-4 sm:py-2 sm:text-sm"
           >
             开始接入
             <IconChevron className="h-3.5 w-3.5" />
           </a>
         </div>
-        <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 lg:mx-0 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
+        <nav className="flex flex-nowrap gap-2 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="shrink-0 rounded-full border border-transparent bg-zinc-100/80 px-3 py-1 text-xs text-[var(--color-muted)] transition hover:border-[var(--color-line)] hover:text-[var(--color-ink)] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:text-sm"
+              className="shrink-0 whitespace-nowrap rounded-full border border-transparent bg-zinc-100/80 px-3 py-1 text-xs text-[var(--color-muted)] transition hover:border-[var(--color-line)] hover:text-[var(--color-ink)]"
             >
               {link.label}
             </a>
