@@ -40,7 +40,13 @@ cd apps/web && npm install && npm run dev
 2. **Build and deployment → Source** 选 **GitHub Actions**（不要选 Deploy from branch）
 3. 推送 `main` 后工作流 [deploy-web-pages.yml](.github/workflows/deploy-web-pages.yml) 会自动构建 `apps/web` 并发布
 
-若 Pages 显示 404，确认 Settings 里 Source 为 **GitHub Actions**，并查看 Actions 是否绿色通过。
+若 **deploy  job 报 404**（`Failed to create deployment`）：
+
+1. 仓库 **Settings → Pages → Source** 选 **GitHub Actions** 后点一次页面底部保存（若有）
+2. 重新跑 Actions：**Actions → Deploy web to GitHub Pages → Run workflow**
+3. 仍失败时：Settings → Pages 暂时选 **Deploy from branch** → 分支 `main`、目录 `/docs` 或任意后立刻改回 **GitHub Actions**，再跑 workflow
+
+工作流已包含 `actions/configure-pages@v4`（首次启用 Pages 所需）。
 
 ### 日常开发
 

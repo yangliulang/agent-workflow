@@ -1,5 +1,7 @@
 # 将 apps/web 构建并发布到 GitHub Pages
 # 站点：https://yangliulang.github.io/agent-workflow/
+#
+# 若 deploy 报 404：仓库 Settings → Pages → Source 必须为 GitHub Actions
 
 name: Deploy web to GitHub Pages
 
@@ -15,7 +17,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -24,10 +26,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
 
