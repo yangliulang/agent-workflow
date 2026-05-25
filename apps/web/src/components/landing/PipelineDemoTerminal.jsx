@@ -168,33 +168,55 @@ export default function PipelineDemoTerminal() {
   }, []);
 
   return (
-    <div className="card-surface flex h-[380px] w-full shrink-0 flex-col overflow-hidden rounded-[1.75rem] md:h-[400px]">
+    <div className="card-surface flex h-[min(22rem,58dvh)] w-full max-w-full min-w-0 shrink-0 flex-col overflow-hidden rounded-2xl sm:h-[360px] sm:rounded-[1.75rem] md:h-[400px] md:animate-float-md">
       {/* 标题栏 */}
-      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--color-line)] bg-zinc-50/90 px-4 py-3">
-        <span className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-          <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
-        </span>
-        <span className="text-xs font-medium text-[var(--color-muted)]">Cursor · 流水线演示</span>
-        <span className="ml-auto font-mono text-[10px] text-[var(--color-muted)]">{DEMO_FEATURE}</span>
-        {typing && (
-          <span className="rounded-full bg-teal-500/15 px-2 py-0.5 font-mono text-[10px] text-teal-600">
-            running
+      <div className="flex shrink-0 flex-col gap-2 border-b border-[var(--color-line)] bg-zinc-50/90 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-2 sm:px-4 sm:py-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex shrink-0 gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
           </span>
-        )}
+          <span className="truncate text-xs font-medium text-[var(--color-muted)]">
+            Cursor · 流水线演示
+          </span>
+        </div>
+        <div className="flex min-w-0 items-center gap-2 sm:ml-auto">
+          <span className="min-w-0 truncate font-mono text-[9px] text-[var(--color-muted)] sm:max-w-[11rem] sm:text-[10px]">
+            {DEMO_FEATURE}
+          </span>
+          {typing && (
+            <span className="shrink-0 rounded-full bg-teal-500/15 px-2 py-0.5 font-mono text-[10px] text-teal-600">
+              running
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* 阶段进度 */}
-      <div className="shrink-0 border-b border-[var(--color-line)] bg-zinc-900/95 px-3 py-2.5">
-        <div className="flex gap-1 overflow-x-auto pb-0.5">
+      {/* 阶段进度：移动端网格，桌面端横排 */}
+      <div className="shrink-0 border-b border-[var(--color-line)] bg-zinc-900/95 px-2.5 py-2 sm:px-3 sm:py-2.5">
+        <div className="grid grid-cols-4 gap-1 sm:flex sm:gap-1.5 sm:overflow-x-auto sm:pb-0.5">
           {DEMO_PHASES.map((p) => {
             const active = p === phaseHighlight;
             const passed = phaseIndex(p) < phaseIndex(phaseHighlight);
+            const short =
+              p === 'planned'
+                ? 'plan'
+                : p === 'contract_ready'
+                  ? 'ctr'
+                  : p === 'backend_done'
+                    ? 'api'
+                    : p === 'frontend_done'
+                      ? 'fe'
+                      : p === 'e2e_verified'
+                        ? 'e2e'
+                        : p === 'ui_reviewed'
+                          ? 'ui'
+                          : 'done';
             return (
               <div
                 key={p}
-                className={`shrink-0 rounded-md px-1.5 py-1 font-mono text-[9px] leading-none transition-all duration-300 ${
+                className={`rounded px-1 py-1 text-center font-mono text-[8px] leading-tight transition-all duration-300 sm:shrink-0 sm:rounded-md sm:px-1.5 sm:text-[9px] ${
                   active
                     ? 'bg-teal-500/25 text-teal-300 ring-1 ring-teal-400/50'
                     : passed
@@ -203,14 +225,14 @@ export default function PipelineDemoTerminal() {
                 }`}
                 title={p}
               >
-                {p === 'contract_ready' ? 'contract' : p === 'backend_done' ? 'backend' : p === 'frontend_done' ? 'frontend' : p === 'e2e_verified' ? 'e2e' : p === 'ui_reviewed' ? 'ui_rev' : p}
+                {short}
               </div>
             );
           })}
         </div>
         {scene && (
-          <p className="mt-2 truncate font-mono text-[10px] text-zinc-500">
-            当前任务 · {scene.agent} · phase: {scene.phase}
+          <p className="mt-1.5 line-clamp-2 font-mono text-[9px] leading-snug text-zinc-500 sm:mt-2 sm:truncate sm:text-[10px]">
+            {scene.agent} · {scene.phase}
           </p>
         )}
       </div>
@@ -218,7 +240,7 @@ export default function PipelineDemoTerminal() {
       {/* 终端输出（固定总高，仅内部滚动） */}
       <div
         ref={scrollRef}
-        className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain bg-zinc-950 p-4 font-mono text-[12px] leading-relaxed md:text-[13px]"
+        className="min-h-0 flex-1 space-y-1.5 overflow-x-hidden overflow-y-auto overscroll-y-contain bg-zinc-950 p-3 font-mono text-[11px] leading-relaxed sm:p-4 sm:text-[12px] md:text-[13px]"
       >
         {lines.map((line, i) => (
           <TerminalLine key={line.id} line={line} isLatest={i === lines.length - 1 && typing} />
@@ -242,7 +264,9 @@ function TerminalLine({ line, isLatest }) {
 
   if (line.type === 'cmd') {
     return (
-      <div className={`text-zinc-100 ${isLatest ? 'animate-fade-up' : ''}`}>
+      <div
+        className={`break-all text-zinc-100 ${isLatest ? 'animate-fade-up' : ''}`}
+      >
         <span className="text-teal-500">› </span>
         {line.text}
       </div>
@@ -250,21 +274,21 @@ function TerminalLine({ line, isLatest }) {
   }
 
   if (line.type === 'meta') {
-    return <div className="pl-3 text-zinc-600">{line.text}</div>;
+    return <div className="break-words pl-2 text-zinc-600 sm:pl-3">{line.text}</div>;
   }
 
   if (line.type === 'out') {
     return (
-      <div className="flex gap-2 pl-3 text-zinc-400">
+      <div className="flex gap-1.5 break-words pl-2 text-zinc-400 sm:gap-2 sm:pl-3">
         <span className="shrink-0 text-zinc-600">│</span>
-        <span>{line.text}</span>
+        <span className="min-w-0">{line.text}</span>
       </div>
     );
   }
 
   if (line.type === 'status') {
     return (
-      <div className="pl-3 text-teal-400/90">
+      <div className="break-words pl-2 text-teal-400/90 sm:pl-3">
         <span className="text-teal-600">◆ </span>
         {line.text}
       </div>
@@ -273,7 +297,7 @@ function TerminalLine({ line, isLatest }) {
 
   if (line.type === 'handoff') {
     return (
-      <div className="pl-3 text-amber-200/80">
+      <div className="break-words pl-2 text-amber-200/80 sm:pl-3">
         <span className="text-amber-500/80">→ </span>
         {line.text}
       </div>

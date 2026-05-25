@@ -17,13 +17,15 @@ import {
 
 function SectionHeader({ eyebrow, title, description, align = 'left' }) {
   return (
-    <div className={align === 'center' ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}>
+    <div
+      className={`min-w-0 ${align === 'center' ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}
+    >
       {eyebrow && (
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-accent-deep)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--color-accent-deep)] sm:tracking-[0.2em]">
           {eyebrow}
         </p>
       )}
-      <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-ink)] md:text-4xl">
+      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--color-ink)] sm:text-3xl md:text-4xl">
         {title}
       </h2>
       {description && (
@@ -35,35 +37,37 @@ function SectionHeader({ eyebrow, title, description, align = 'left' }) {
 
 function SiteNav() {
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-surface-elevated)]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 md:px-8">
-        <a
-          href="#"
-          className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight text-[var(--color-ink)]"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-ink)] text-white shadow-md">
-            <IconLayers className="h-4 w-4" />
-          </span>
-          <span className="truncate">Agent Pipeline</span>
-        </a>
-        <nav className="hidden items-center gap-6 text-sm text-[var(--color-muted)] lg:flex">
+    <header className="sticky top-0 z-30 border-b border-[var(--color-line)] bg-[var(--color-surface-elevated)]/95 backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
+        <div className="flex items-center justify-between gap-3 py-3">
+          <a
+            href="#"
+            className="flex min-w-0 items-center gap-2 font-semibold tracking-tight text-[var(--color-ink)]"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--color-ink)] text-white sm:h-9 sm:w-9 sm:rounded-xl">
+              <IconLayers className="h-4 w-4" />
+            </span>
+            <span className="truncate text-sm sm:text-base">Agent Pipeline</span>
+          </a>
+          <a
+            href="#bind"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-ink)] px-3 py-1.5 text-xs font-medium text-white sm:px-4 sm:py-2 sm:text-sm"
+          >
+            开始接入
+            <IconChevron className="h-3.5 w-3.5" />
+          </a>
+        </div>
+        <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 lg:mx-0 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap transition-colors hover:text-[var(--color-ink)]"
+              className="shrink-0 rounded-full border border-transparent bg-zinc-100/80 px-3 py-1 text-xs text-[var(--color-muted)] transition hover:border-[var(--color-line)] hover:text-[var(--color-ink)] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:text-sm"
             >
               {link.label}
             </a>
           ))}
         </nav>
-        <a
-          href="#bind"
-          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-ink)] px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 active:scale-[0.98]"
-        >
-          开始接入
-          <IconChevron className="h-3.5 w-3.5" />
-        </a>
       </div>
     </header>
   );
@@ -72,37 +76,37 @@ function SiteNav() {
 function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-[var(--color-line)]">
-      <div className="pointer-events-none absolute -right-24 top-0 h-96 w-96 rounded-full bg-teal-400/10 blur-3xl" />
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-2 md:items-start md:gap-14 md:px-8 md:py-20 lg:py-24">
-        <div className="max-w-xl animate-fade-up md:pt-2">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200/80 bg-[var(--color-accent-soft)]/50 px-3 py-1 text-xs font-medium text-[var(--color-accent-deep)]">
+      <div className="pointer-events-none absolute -right-24 top-0 hidden h-96 w-96 rounded-full bg-teal-400/10 blur-3xl sm:block" />
+      <div className="mx-auto grid w-full max-w-7xl min-w-0 grid-cols-1 gap-8 px-4 py-10 sm:gap-10 md:grid-cols-2 md:items-start md:gap-14 md:px-8 md:py-20 lg:py-24">
+        <div className="min-w-0 max-w-xl animate-fade-up md:pt-2">
+          <p className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-teal-200/80 bg-[var(--color-accent-soft)]/50 px-3 py-1 text-xs font-medium text-[var(--color-accent-deep)]">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)] animate-pulse-dot" />
-            Cursor × handoff 文件交接
+            <span className="truncate">Cursor × handoff 文件交接</span>
           </p>
-          <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-[var(--color-ink)] md:text-[3.25rem]">
+          <h1 className="text-[1.65rem] font-semibold leading-[1.12] tracking-tight text-[var(--color-ink)] sm:text-3xl md:text-4xl lg:text-[3.25rem]">
             多 Agent 协作，
             <span className="text-[var(--color-accent-deep)]">不靠聊天记需求</span>
           </h1>
-          <p className="mt-5 max-w-[65ch] text-base leading-relaxed text-[var(--color-muted)]">
+          <p className="mt-4 text-sm leading-relaxed text-[var(--color-muted)] sm:mt-5 sm:text-base">
             以功能包、OpenAPI 契约与 status.yaml 状态机驱动交付。指挥官只填功能 ID 与
             Skill，任务由 handoff/pipeline 自动展开。
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-3">
             <a
               href="#bind"
-              className="inline-flex items-center rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-medium text-white shadow-[0_14px_36px_-14px_rgba(13,148,136,0.55)] transition hover:bg-[var(--color-accent-deep)] active:-translate-y-px"
+              className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-accent)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_36px_-14px_rgba(13,148,136,0.55)] transition hover:bg-[var(--color-accent-deep)] active:-translate-y-px sm:w-auto sm:px-6"
             >
               四步上手
             </a>
             <a
               href="#commands"
-              className="inline-flex items-center rounded-full border border-[var(--color-line)] bg-white px-6 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:border-teal-300/80 active:scale-[0.98]"
+              className="inline-flex w-full items-center justify-center rounded-full border border-[var(--color-line)] bg-white px-5 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:border-teal-300/80 active:scale-[0.98] sm:w-auto sm:px-6"
             >
               Skill 速查
             </a>
           </div>
         </div>
-        <div className="w-full md:sticky md:top-24">
+        <div className="min-w-0 w-full max-w-full md:sticky md:top-28">
           <PipelineDemoTerminal />
         </div>
       </div>
@@ -199,8 +203,7 @@ function PipelineSection() {
           title="流水线阶段"
           description="phase 与 next 决定谁该工作；/pipeline-next 读取 next_task_map。"
         />
-        <div className="mt-10 -mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-          <ol className="flex min-w-[680px] list-none gap-2 md:min-w-0 md:grid md:grid-cols-4 md:gap-3 lg:grid-cols-8">
+        <ol className="mt-8 grid list-none grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
             {PHASES.map((p) => (
               <li key={p.id}>
                 <div
@@ -219,8 +222,7 @@ function PipelineSection() {
                 </div>
               </li>
             ))}
-          </ol>
-        </div>
+        </ol>
       </div>
     </section>
   );
@@ -289,14 +291,16 @@ function RolesSection() {
             {ROLES.map((r) => (
               <li
                 key={r.id}
-                className="grid gap-3 px-5 py-5 md:grid-cols-[160px_1fr_1fr] md:items-center md:gap-6 md:py-6"
+                className="flex flex-col gap-2 px-4 py-4 sm:px-5 sm:py-5 md:grid md:grid-cols-[160px_1fr_1fr] md:items-center md:gap-6 md:py-6"
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-[var(--color-ink)]">{r.title}</p>
-                  <p className="mt-0.5 font-mono text-xs text-[var(--color-muted)]">{r.id}</p>
+                  <p className="mt-0.5 break-all font-mono text-xs text-[var(--color-muted)]">
+                    {r.id}
+                  </p>
                 </div>
                 <p className="text-sm leading-relaxed text-[var(--color-muted)]">{r.scope}</p>
-                <p className="font-mono text-xs leading-relaxed text-[var(--color-ink)]/75">
+                <p className="break-all font-mono text-xs leading-relaxed text-[var(--color-ink)]/75">
                   {r.output}
                 </p>
               </li>
@@ -430,9 +434,9 @@ function SiteFooter() {
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-[100dvh]">
+    <div className="relative min-h-[100dvh] overflow-x-hidden">
       <div className="page-grain" aria-hidden />
-      <div className="relative z-10">
+      <div className="relative z-10 w-full max-w-[100vw] overflow-x-hidden">
         <SiteNav />
         <main>
           <Hero />
