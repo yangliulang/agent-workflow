@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# 功能包 status.yaml 更新后，提示流水线下一步 Skill（fail-open）
+# stdin: Cursor Hook JSON；stdout: Hook 响应 JSON
+#
+# - postToolUse（Write/StrReplace）：输出 additional_context（每次写入都会注入）
+# - stop：输出 followup_message（会话结束时的自动续聊；loop_limit 见 hooks.json）
+# - afterFileEdit：仅作路径探测；官方文档未定义输出字段，不依赖其展示提醒
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+INPUT="$(cat)"
+
+HOOK_EVENT=""
+FILE_PATH=""
+
+if command -v python3 >/dev/null 2>&1 && [ -n "$INPUT" ]; then
+  read -r HOOK_EVENT FILE_PATH < <(printf '%s' "$INPUT" | python3 -c '
+import json, sys
+
+def norm_path(p):
+    if not isinstance(p, str) or "status.yaml" not in p:
+        return None
+    return p.split("file://")[-1] if p.startswith("file://") else p
+
+raw = sys.stdin.read()
+if not raw.strip():
+    sys.exit(0)
+try:
+    data = json.loads(raw)
+except json.JSONDecodeError:
+    sys.exit(0)
+
+event = data.get("hook_event_name") or ""
+
+for key in ("file_path", "path", "filePath", "editedFile", "uri"):
+    p = norm_path(data.get(key))
+    if p:
+        print(event, p)
+        sys.exit(0)
+
+tool = data.get("tool_name") or ""
+if tool in ("Write", "StrReplace") or event == "postToolUse":
+    ti = data.get("tool_input")
+    if isinstance(ti, str):
+        try:
+            ti = json.loads(ti)
+        except json.JSONDecodeError:
+            ti = {}
+    if isinstance(ti, dict):
+        p = norm_path(ti.get("path") or ti.get("file_path"))
+        if p:
+            print(event, p)
+            sys.exit(0)
+
+print(event, "")
+' 2>/dev/null || true)
+fi
+
+if [ -z "$FILE_PATH" ]; then
+  FILE_PATH="$(printf '%s' "$INPUT" | grep -oE 'handoff/features/[0-9]{4}-[0-9]{2}-[0-9]{2}--[a-z0-9-]+/status\.yaml' | head -1 || true)"
+fi
+
+# stop：未命中路径时，找 3 分钟内修改过的 status.yaml
+if { [ -z "$FILE_PATH" ] || [[ "$FILE_PATH" != *status.yaml ]]; } && [ "$HOOK_EVENT" = "stop" ]; then
+  if [ -d "$ROOT/handoff/features" ]; then
+    FILE_PATH="$(find "$ROOT/handoff/features" -name status.yaml -mmin -3 2>/dev/null | head -1 || true)"
+  fi
+fi
+
+if [ -z "$FILE_PATH" ] || [[ "$FILE_PATH" != *status.yaml ]]; then
+  exit 0
+fi
+
+case "$FILE_PATH" in
+  /*) STATUS_FILE="$FILE_PATH" ;;
+  *) STATUS_FILE="$ROOT/$FILE_PATH" ;;
+esac
+
+[ -f "$STATUS_FILE" ] || exit 0
+
+FEATURE_ID="$(grep -E '^feature:' "$STATUS_FILE" | head -1 | sed 's/^feature:[[:space:]]*//;s/[[:space:]]*$//')"
+PHASE="$(grep -E '^phase:' "$STATUS_FILE" | head -1 | sed 's/^phase:[[:space:]]*//;s/[[:space:]]*$//')"
+NEXT="$(grep -E '^next:' "$STATUS_FILE" | head -1 | sed 's/^next:[[:space:]]*//;s/[[:space:]]*$//')"
+
+HAS_BLOCKERS=false
+if grep -qE '^blockers:' "$STATUS_FILE" && ! grep -qE '^blockers:[[:space:]]*\[\][[:space:]]*$' "$STATUS_FILE"; then
+  if awk '/^blockers:/{f=1;next} f && /^[^[:space:]]/{exit} f && /- /{found=1; exit}' "$STATUS_FILE"; then
+    HAS_BLOCKERS=true
+  fi
+fi
+
+# 功能已闭环（next: null / 空，或 phase: done）→ 不再注入提醒
+if [ "$PHASE" = "done" ] || [ "$NEXT" = "null" ] || [ -z "$NEXT" ]; then
+  exit 0
+fi
+
+TASK_KEY=""
+case "$NEXT" in
+  null|"") TASK_KEY="" ;;
+  backend-agent)
+    case "$PHASE" in
+      contract_ready|backend_in_progress) TASK_KEY="backend.implement" ;;
+    esac
+    ;;
+  test-agent)
+    case "$PHASE" in
+      backend_done) TASK_KEY="test.api" ;;
+      frontend_done)
+        if $HAS_BLOCKERS; then TASK_KEY=""; else TASK_KEY="test.e2e"; fi
+        ;;
+    esac
+    ;;
+  frontend-agent)
+    case "$PHASE" in
+      tested) TASK_KEY="frontend.integrate" ;;
+      frontend_done) TASK_KEY="frontend.fix-e2e" ;;
+      e2e_verified) TASK_KEY="frontend.fix-ui" ;;
+    esac
+    ;;
+  designer-agent)
+    case "$PHASE" in
+      e2e_verified) TASK_KEY="designer.review" ;;
+    esac
+    ;;
+  product-agent)
+    case "$PHASE" in
+      planned) TASK_KEY="product.contract" ;;
+      ui_reviewed) TASK_KEY="product.accept" ;;
+    esac
+    ;;
+esac
+
+SKILL=""
+case "$TASK_KEY" in
+  product.plan) SKILL="pipeline-product-plan" ;;
+  product.contract) SKILL="pipeline-product-contract" ;;
+  product.accept) SKILL="pipeline-product-accept" ;;
+  backend.implement) SKILL="pipeline-backend" ;;
+  test.prepare) SKILL="pipeline-test-prepare" ;;
+  test.api) SKILL="pipeline-test-api" ;;
+  test.e2e) SKILL="pipeline-test-e2e" ;;
+  test.e2e-retest) SKILL="pipeline-test-e2e-retest" ;;
+  frontend.integrate) SKILL="pipeline-frontend-integrate" ;;
+  frontend.fix-e2e) SKILL="pipeline-frontend-fix-e2e" ;;
+  frontend.fix-ui) SKILL="pipeline-frontend-fix-ui" ;;
+  frontend.mock) SKILL="pipeline-frontend-mock" ;;
+  designer.review) SKILL="pipeline-designer-review" ;;
+  designer.rereview) SKILL="pipeline-designer-rereview" ;;
+esac
+
+MSG=""
+if [ -n "$SKILL" ]; then
+  CMD="/${SKILL} ${FEATURE_ID}"
+  MSG="【流水线】\`${FEATURE_ID}\` 当前 \`phase: ${PHASE}\`，\`next: ${NEXT}\`。请**新开 Chat** 执行：\`${CMD}\`（或 \`/pipeline-next ${FEATURE_ID}\`）。"
+  if $HAS_BLOCKERS; then
+    MSG="${MSG} 注意：\`blockers\` 非空，请先处理返工项。"
+  fi
+  if [ "$PHASE" = "contract_ready" ] && [ "$NEXT" = "backend-agent" ]; then
+    MSG="${MSG} 可选并行：\`/pipeline-test-prepare ${FEATURE_ID}\`、\`/pipeline-frontend-mock ${FEATURE_ID}\`。"
+  fi
+else
+  MSG="【流水线】\`${FEATURE_ID}\` → \`phase: ${PHASE}\`，\`next: ${NEXT}\`。无自动映射任务，请执行 \`/pipeline-next ${FEATURE_ID}\` 或查阅 \`handoff/pipeline/COMMANDER.md\` §3。"
+  if $HAS_BLOCKERS; then
+    MSG="${MSG} \`blockers\` 非空，见 status.yaml。"
+  fi
+fi
+
+escape_json() {
+  printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null || \
+    printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g;s/$/\\n/' | tr -d '\n' | sed 's/\\n$//'
+}
+
+ESC_MSG="$(escape_json "$MSG")"
+
+# stop：自动续聊；其余（含 postToolUse）：注入 Agent 上下文
+if [ "$HOOK_EVENT" = "stop" ]; then
+  printf '{"followup_message":%s}\n' "$ESC_MSG"
+else
+  printf '{"additional_context":%s}\n' "$ESC_MSG"
+fi
+exit 0

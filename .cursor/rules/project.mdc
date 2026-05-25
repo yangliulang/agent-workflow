@@ -1,0 +1,51 @@
+---
+description: 全项目约定 — 契约优先、目录结构、禁止事项
+alwaysApply: true
+---
+
+# 全项目约定
+
+完整说明见 `handoff/conventions/project.md`。**项目路径与 URL** 以根目录 `pipeline.project.yaml` 为准（勿写死 `apps/api` 等）。
+
+## 项目绑定
+
+执行流水线任务前，读取 `pipeline.project.yaml`（或运行 `./scripts/lib/read-pipeline-project.sh` 的 `pp_print_context`）获取：
+
+- `apps.backend.path` / `apps.frontend.path`
+- `apps.backend.dev.base_url` / `apps.frontend.dev.base_url`
+- `project.prd.primary`、`roadmap.default_phase_file`、`features.root`
+
+## 契约优先
+
+- 以 `{features.root}/YYYY-MM-DD--xxx/api.openapi.yaml` 为 API 真相源
+- 单功能需求以该功能包 `brief.md` 为准
+- 不得在未更新契约的情况下改变对外 API 行为
+
+## 统一响应
+
+```json
+{ "code": 0, "message": "ok", "data": {} }
+```
+
+错误：`{ "code": <非0>, "message": "<说明>" }`
+
+## 禁止
+
+- 跳过 `status.yaml` 门禁（除非指挥官 Prompt 显式豁免）
+- 将密钥写入仓库
+- 用聊天历史代替功能包文件
+
+## 规范索引
+
+`handoff/conventions/README.md`
+
+## 指挥官简写调用
+
+当用户消息包含 **功能 ID**（如 `2026-05-25--greeting`）或 `handoff/features/...` 路径，且未粘贴长 Prompt 时：
+
+1. 将功能 ID 规范为 `{features.root}/{feature-id}/`（格式 `YYYY-MM-DD--slug`；若用户只给 slug 则用当天日期拼接）；读取该目录 `status.yaml`
+2. 打开 `handoff/pipeline/tasks.yaml`，按用户指定的 **任务键**（若给出）或 `next` + `phase` 的 `next_task_map` 选择任务
+3. 执行任务 `steps`（替换 `{{feat}}`、`{{feature_dir}}` 及 `tasks.yaml` 头注释中的项目占位符），并遵守对应 `.cursor/rules/{agent}-agent.mdc`
+4. 若 `phase` / `next` 与任务要求不符，**停止**并说明当前应由谁处理（见 `handoff/pipeline/COMMANDER.md`）
+
+指挥官手册：`handoff/pipeline/COMMANDER.md`。
