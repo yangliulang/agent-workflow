@@ -6,9 +6,8 @@
 
 | 事件 | 行为 |
 |------|------|
-| `postToolUse`（`Write` / `StrReplace`） | Agent 写入 `status.yaml` 后，向当前对话注入 `additional_context`（**每次推进都会提醒**；可由 `pipeline.hooks.remind_on_write` 关闭） |
-| `stop` | 本轮 Agent 结束时，若 3 分钟内改过某功能包 `status.yaml`，可输出 `followup_message` 续聊（**默认关闭**，见 `pipeline.hooks.stop_followup`） |
-| `afterFileEdit` | 仅辅助识别路径；Cursor 官方未定义该事件的输出字段，**不依赖**其展示提醒 |
+| `postToolUse`（`Write` / `StrReplace`） | **仅当**工具路径为某功能包 `status.yaml` 时，注入 `additional_context`（可由 `pipeline.hooks.remind_on_write` 关闭） |
+| `stop` | **仅当** `pipeline.hooks.stop_followup: true` 时，对 3 分钟内改过的 `status.yaml` 输出 `followup_message`（默认 `false`，避免同 Chat 反复自动续聊） |
 
 策略：**fail-open**（脚本异常不阻断保存或结束会话）。**项目策略**在根目录 `pipeline.project.yaml` → `pipeline.hooks`（脚本运行时读取；`hooks.json` 路径不变）。
 
@@ -29,10 +28,14 @@
 
 ### 为何有时「状态变了却没有提醒」？
 
-1. **同一会话 `stop` 次数受限（已修复）**：旧配置 `loop_limit: 1` 时，整段 Chat 只会自动续聊**一次**（例如已提醒过 `backend_done`，推进到 `tested` 后不再弹出）。现改为 `loop_limit: null`，每轮结束都可提醒。
-2. **`afterFileEdit` 不展示文案**：脚本曾向该事件输出 `additional_context`，但 Cursor 文档未声明 `afterFileEdit` 的 stdout 字段，用户看不到。现改由 `postToolUse` 在每次 Write/StrReplace 写入 `status.yaml` 后注入上下文。
-3. **Hooks 未启用**：在 Cursor **Settings → Hooks** 确认项目 `hooks.json` 已加载；改配置后建议重启 Cursor。
-4. **手动改文件**：若用外部编辑器改 `status.yaml` 且未经过 Agent 工具，仅 `stop` 后 3 分钟内的 `find` 兜底可能命中；保存后结束当前 Agent 轮次或新开 Chat 执行 `/pipeline-next` 更稳妥。
+1. **Hooks 未启用**：在 Cursor **Settings → Hooks** 确认项目 `hooks.json` 已加载；改配置后建议重启 Cursor。
+2. **手动改文件**：若用外部编辑器改 `status.yaml` 且未经过 Agent 工具，默认**不会**注入提醒（`stop_followup: false`）。请指挥官确认后**新开 Chat** 执行 `/pipeline-next` 或对应 Skill。
+3. **`remind_on_write: false`**：写入 `status.yaml` 也不注入，仅依赖 `stop_followup: true` 时在会话结束跟一条（更自动，也更容易在同 Chat 内连发）。
+
+### 为何曾出现「同一句提醒反复自动对话」？
+
+1. **脚本误触发（已修复）**：旧版在 `stop` 之外的事件、或 stdin 任意字段提到 `status.yaml` 时也会注入 `additional_context`；Agent 每轮结束又回复「本回合不推进门禁」，形成空转。
+2. **`stop_followup: true` + `loop_limit: null`**：每轮结束都跟一条 `followup_message`；与 `require_new_chat: true` 同时存在时，Agent 仍无法在本 Chat 推进，容易刷屏。**推荐**保持 `stop_followup: false`，写入时提醒一次即可。
 
 ## 提示内容
 

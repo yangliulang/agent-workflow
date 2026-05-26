@@ -6,6 +6,7 @@
 # 项目占位符（执行前读 pipeline.project.yaml，或 ./scripts/lib/read-pipeline-project.sh pp_print_context）：
 #   {{features_root}} {{backend_path}} {{frontend_path}}
 #   {{api_base_url}} {{web_dev_url}} {{prd_path}} {{default_roadmap}}
+#   {{onboarding_mode}} {{inventory_path}} {{backlog_path}} {{active_phase}}
 #
 # 本仓库默认值（与 pipeline.project.yaml 一致）：
 #   features_root=handoff/features  backend_path=apps/api  frontend_path=apps/web
@@ -20,12 +21,29 @@ tasks:
     target_phase: null
     steps: |
       你是 product-agent。遵守 .cursor/rules/product-agent.mdc 与 handoff/conventions/product.md。
-      读取 pipeline.project.yaml（PRD 默认路径见 project.prd.primary，当前示例 {{prd_path}}）。
-      根据指挥官提供的 PRD/描述，创建或更新 handoff/roadmap/phase-N.md：
-      阶段目标、backlog（功能 ID、优先级、依赖）、本阶段不做。
-      不写各功能包内的 brief / OpenAPI。
-      完成后对照 handoff/pipeline/checklists/product-plan.md 逐项自检；
-      在回复中列出未勾选项（应为无），并提示指挥官确认后再 product.contract。
+      读取 pipeline.project.yaml（`project.onboarding.mode`、`product.*`、`roadmap.*`）。
+      模式分支（详见 handoff/conventions/onboarding-modes.md）：
+      - **greenfield**：根据 PRD（{{prd_path}} 或用户附件）创建/更新 handoff/roadmap/phase-N.md。
+      - **brownfield**：读 {{inventory_path}}（§4、§6）与 PRD 指定章节；不把 §2 已实现写成 planned。
+      - **continuing**：读 {{backlog_path}} 中 status=queued/in_phase 与 {{inventory_path}} §4；与当前 {{default_roadmap}} 对齐，不重复 §2 已实现。
+      产出：阶段目标、backlog 表（功能 ID、优先级、依赖）、本阶段不做；不写 brief/OpenAPI。
+      完成后对照 handoff/pipeline/checklists/product-plan.md 自检；提示指挥官确认后再 product.contract。
+
+  product.phase-close:
+    agent: product-agent
+    title: 阶段收束（phase → 下一迭代）
+    requires_next: null
+    target_phase: null
+    steps: |
+      你是 product-agent。遵守 handoff/conventions/onboarding-modes.md。
+      1. 读取 pipeline.project.yaml 的 project.onboarding.mode 与 roadmap.active_phase。
+      2. 打开 handoff/roadmap/phase-{active_phase}.md，确认 backlog 表**全部为 done**；否则停止并列出未完成项。
+      3. 运行 `./scripts/advance-phase.sh`（可加 --dry-run 先展示）；脚本会：
+         - 将 done 项追加到 inventory §2
+         - 从 backlog.yaml 按优先级切片下一批 → inventory §4 + phase-(N+1).md
+         - 将 mode 设为 continuing（若原为 greenfield/brownfield）
+      4. 在回复中摘要：新 phase 文件路径、§4 条目、建议 `/pipeline-product-contract <首个ID>`。
+      5. 提醒指挥官：可调 backlog.yaml 优先级后再次 advance-phase；§5/§6 仍需人工维护。
 
   product.contract:
     agent: product-agent

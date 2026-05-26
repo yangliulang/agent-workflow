@@ -8,12 +8,6 @@
         "matcher": "Write|StrReplace"
       }
     ],
-    "afterFileEdit": [
-      {
-        "command": ".cursor/hooks/pipeline-status-reminder.sh",
-        "timeout": 8
-      }
-    ],
     "stop": [
       {
         "command": ".cursor/hooks/pipeline-status-reminder.sh",

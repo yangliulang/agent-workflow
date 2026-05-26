@@ -2,9 +2,9 @@
 # 功能包 status.yaml 更新后，提示流水线下一步 Skill（fail-open）
 # stdin: Cursor Hook JSON；stdout: Hook 响应 JSON
 #
-# - postToolUse（Write/StrReplace）：输出 additional_context（每次写入都会注入）
-# - stop：输出 followup_message（会话结束时的自动续聊；loop_limit 见 hooks.json）
-# - afterFileEdit：仅作路径探测；官方文档未定义输出字段，不依赖其展示提醒
+# - postToolUse（Write/StrReplace status.yaml）：输出 additional_context
+# - stop：仅当 pipeline.hooks.stop_followup=true 时输出 followup_message
+# - 其它事件（含 afterFileEdit）：不输出，避免误触发反复注入
 
 set -euo pipefail
 
@@ -77,8 +77,17 @@ print(event, "")
 ' 2>/dev/null || true)
 fi
 
-if [ -z "$FILE_PATH" ]; then
-  FILE_PATH="$(printf '%s' "$INPUT" | grep -oE 'handoff/features/[0-9]{4}-[0-9]{2}-[0-9]{2}--[a-z0-9-]+/status\.yaml' | head -1 || true)"
+# 仅处理明确事件；禁止从整段 stdin grep 路径（会把对话里提到的 status.yaml 误判为本次写入）
+case "$HOOK_EVENT" in
+  postToolUse|stop) ;;
+  *) exit 0 ;;
+esac
+
+if [ "$HOOK_EVENT" = "postToolUse" ] && [ "$HOOKS_REMIND_ON_WRITE" != "true" ]; then
+  exit 0
+fi
+if [ "$HOOK_EVENT" = "stop" ] && [ "$HOOKS_STOP_FOLLOWUP" != "true" ]; then
+  exit 0
 fi
 
 # stop：未命中路径时，找 3 分钟内修改过的 status.yaml
@@ -199,16 +208,9 @@ escape_json() {
 
 ESC_MSG="$(escape_json "$MSG")"
 
-# stop：可选自动续聊（pipeline.hooks.stop_followup）；其余：写入时注入上下文
 if [ "$HOOK_EVENT" = "stop" ]; then
-  if [ "$HOOKS_STOP_FOLLOWUP" != "true" ]; then
-    exit 0
-  fi
   printf '{"followup_message":%s}\n' "$ESC_MSG"
 else
-  if [ "$HOOKS_REMIND_ON_WRITE" != "true" ]; then
-    exit 0
-  fi
   printf '{"additional_context":%s}\n' "$ESC_MSG"
 fi
 exit 0

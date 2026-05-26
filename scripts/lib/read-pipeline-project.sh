@@ -97,5 +97,9 @@ api_base_url=$(pp_get apps.backend.dev.base_url)
 web_dev_url=$(pp_get apps.frontend.dev.base_url)
 prd_path=$(pp_get project.prd.primary)
 default_roadmap=$(pp_get roadmap.default_phase_file)
+onboarding_mode=$(pp_get_optional project.onboarding.mode greenfield)
+inventory_path=$(pp_get_optional product.inventory handoff/product/inventory.md)
+backlog_path=$(pp_get_optional product.backlog handoff/product/backlog.yaml)
+active_phase=$(pp_get_optional roadmap.active_phase 1)
 EOF
 }

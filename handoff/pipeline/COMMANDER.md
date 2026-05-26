@@ -70,6 +70,7 @@ handoff/pipeline/tasks.yaml
 | 前端：UI 返工 | `/pipeline-frontend-fix-ui 2026-05-25--greeting` |
 | 设计：UI 走查 | `/pipeline-designer-review 2026-05-25--greeting` |
 | 产品：验收 | `/pipeline-product-accept 2026-05-25--greeting` |
+| 产品：阶段收束 | `/pipeline-product-phase-close` |
 
 可选：`/pipeline-frontend-mock`、`/pipeline-test-prepare`、`/pipeline-designer-rereview`、`/pipeline-test-e2e-retest`。
 
@@ -141,8 +142,9 @@ Skill 会读 `status.yaml` 的 `phase` + `next`，从 `tasks.yaml` 的 `next_tas
 
 | 目标 | 调用 |
 |------|------|
-| 从 PRD 拆 Phase 1 backlog | `/pipeline-product-plan` + 附上 PRD 或 `@你的PRD.md` |
-| **存量项目**（已开发过） | 先填 [inventory.md](../product/inventory.md)，再用 [brownfield-product-plan-prompt.md](../product/brownfield-product-plan-prompt.md) 调 `product.plan` |
+| 从 PRD 拆 Phase 1 backlog | `/pipeline-product-plan` + 附上 PRD 或 `@你的PRD.md`（`mode: greenfield`） |
+| **存量首次接入** | `mode: brownfield` → inventory → `./scripts/seed-backlog-from-inventory.sh` → plan |
+| **续写下一迭代** | 改 `backlog.yaml` 优先级 → phase 全 done → `/pipeline-product-phase-close` |
 | 试跑极简功能 | 先 product-plan，再对 `2026-05-25--greeting` 走第 3 节 7 步 |
 
 ---
@@ -194,6 +196,7 @@ Skill 会读 `status.yaml` 的 `phase` + `next`，从 `tasks.yaml` 的 `next_tas
 | 任务键 | Skill |
 |--------|-------|
 | `product.plan` | `pipeline-product-plan` |
+| `product.phase-close` | `pipeline-product-phase-close` |
 | `product.contract` | `pipeline-product-contract` |
 | `backend.implement` | `pipeline-backend` |
 | `test.api` | `pipeline-test-api` |

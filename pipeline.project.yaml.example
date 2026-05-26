@@ -6,6 +6,12 @@ project:
     primary: handoff/product/prd.md
   onboarding:
     commander: handoff/pipeline/COMMANDER.md
+    # greenfield=从0 | brownfield=存量首次接入 | continuing=续写迭代
+    mode: greenfield
+
+product:
+  inventory: handoff/product/inventory.md
+  backlog: handoff/product/backlog.yaml
 
 features:
   root: handoff/features
@@ -13,6 +19,8 @@ features:
 roadmap:
   glob: handoff/roadmap/phase-*.md
   default_phase_file: handoff/roadmap/phase-1.md
+  active_phase: 1
+  phase_capacity: 0
 
 apps:
   backend:
@@ -36,6 +44,6 @@ conventions:
 pipeline:
   hooks:
     enabled: true
-    remind_on_write: true
-    stop_followup: false
+    remind_on_write: true   # 写入 status.yaml 后注入下一条 Skill（每推进一次提醒一次）
+    stop_followup: false    # true 时 stop 跟 followup_message，易与同 Chat「勿推进」空转
     require_new_chat: true

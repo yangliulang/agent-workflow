@@ -12,6 +12,10 @@ import {
   HOOKS_YAML_SNIPPET,
   METRICS,
   NAV_LINKS,
+  ONBOARDING_COMMANDS,
+  ONBOARDING_MODES,
+  ONBOARDING_TRANSITIONS,
+  ONBOARDING_YAML_SNIPPET,
   PHASES,
   REPO_MAIN,
   ROLES,
@@ -426,6 +430,144 @@ function BindSection() {
   );
 }
 
+function OnboardingModesSection() {
+  const [copied, setCopied] = useState(false);
+
+  async function copyYaml() {
+    try {
+      await navigator.clipboard.writeText(ONBOARDING_YAML_SNIPPET);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <section
+      id="onboarding-modes"
+      className="scroll-mt-24 border-y border-[var(--color-line)] bg-gradient-to-b from-[var(--color-surface-elevated)]/70 to-teal-50/30 py-16 md:py-24"
+    >
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
+        <SectionHeader
+          eyebrow="Onboarding Modes"
+          title="三种接入模式"
+          description="由 pipeline.project.yaml → project.onboarding.mode 区分：从 0 新建、存量首次接入、续写迭代。product.plan 与 phase-close 按模式分支，避免每次重填全盘 inventory。"
+        />
+
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          {ONBOARDING_MODES.map((mode) => (
+            <article
+              key={mode.id}
+              className="card-surface flex h-full flex-col rounded-2xl p-5 md:p-6"
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="font-mono text-sm font-semibold text-[var(--color-accent-deep)]">
+                  {mode.title}
+                </h3>
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-[var(--color-muted)]">
+                  {mode.subtitle}
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-[var(--color-muted)]">{mode.when}</p>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div>
+                  <dt className="text-xs font-medium text-[var(--color-muted)]">优先级 SSOT</dt>
+                  <dd className="mt-0.5 font-mono text-xs text-[var(--color-ink)]">{mode.ssot}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-[var(--color-muted)]">典型流程</dt>
+                  <dd className="mt-0.5 leading-relaxed text-[var(--color-muted)]">{mode.flow}</dd>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 card-surface rounded-2xl p-5 md:p-6">
+          <h3 className="text-sm font-semibold text-[var(--color-ink)]">模式切换（闭环）</h3>
+          <ul className="mt-4 space-y-2">
+            {ONBOARDING_TRANSITIONS.map((line) => (
+              <li
+                key={line}
+                className="overflow-x-auto rounded-xl border border-[var(--color-line)] bg-zinc-50/60 px-4 py-2.5 font-mono text-[11px] text-[var(--color-ink)]/85 sm:text-xs"
+              >
+                {line}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs leading-relaxed text-[var(--color-muted)]">
+            首次 phase-close：当前 phase 的 done 行写入 inventory §2，并初始化 backlog.yaml。continuing
+            下 advance-phase 从 backlog 的 queued 按优先级填入 inventory §4，生成 phase-(N+1).md。
+          </p>
+        </div>
+
+        <div className="mt-10 card-surface overflow-hidden rounded-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-[var(--color-line)] bg-zinc-50/80 text-xs text-[var(--color-muted)]">
+                  <th className="px-5 py-3.5 font-semibold">命令 / Skill</th>
+                  <th className="px-5 py-3.5 font-semibold">适用模式</th>
+                  <th className="px-5 py-3.5 font-semibold">说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ONBOARDING_COMMANDS.map((row) => (
+                  <tr
+                    key={row.cmd}
+                    className="border-b border-[var(--color-line)] last:border-0"
+                  >
+                    <td className="whitespace-nowrap px-5 py-4 font-mono text-xs text-[var(--color-accent-deep)]">
+                      {row.cmd}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-xs text-[var(--color-muted)]">
+                      {row.modes}
+                    </td>
+                    <td className="px-5 py-4 text-[var(--color-muted)]">{row.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="mt-10 card-surface overflow-hidden rounded-2xl">
+          <div className="flex flex-col gap-3 border-b border-[var(--color-line)] bg-zinc-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-ink)]">
+                pipeline.project.yaml 片段（可复制）
+              </p>
+              <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                存量项目首次接入设 brownfield；至少完成一个 phase 后改为 continuing
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyYaml}
+              className="inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] px-4 py-2 text-xs font-medium text-white transition hover:bg-zinc-800 active:scale-[0.98]"
+            >
+              {copied ? '已复制' : '复制 YAML'}
+            </button>
+          </div>
+          <pre className="code-block overflow-x-auto px-4 py-4 font-mono text-xs leading-relaxed text-teal-300/95 sm:px-5">
+            <code>{ONBOARDING_YAML_SNIPPET}</code>
+          </pre>
+        </div>
+
+        <a
+          href={`${REPO_MAIN}/handoff/conventions/onboarding-modes.md`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-6 inline-flex text-sm font-medium text-[var(--color-accent-deep)] hover:underline"
+        >
+          仓库内完整说明 handoff/conventions/onboarding-modes.md →
+        </a>
+      </div>
+    </section>
+  );
+}
+
 function BrownfieldSection() {
   const [copied, setCopied] = useState(false);
 
@@ -448,7 +590,7 @@ function BrownfieldSection() {
         <SectionHeader
           eyebrow="Brownfield"
           title="存量项目接入"
-          description="PRD 不必重抄一遍：用 inventory 划切口，roadmap 只排本阶段要做；已实现能力默认不建包、不走 7 步。"
+          description="mode: brownfield 时的详细步骤：用 inventory 划切口，roadmap 只排本阶段要做；已实现能力默认不建包、不走 7 步。"
         />
 
         <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -702,6 +844,9 @@ function SiteFooter() {
           <a href="#bind" className="hover:text-white">
             上手
           </a>
+          <a href="#onboarding-modes" className="hover:text-white">
+            接入模式
+          </a>
           <a href="#brownfield" className="hover:text-white">
             存量接入
           </a>
@@ -728,6 +873,7 @@ export default function LandingPage() {
           <PipelineSection />
           <HooksSection />
           <BindSection />
+          <OnboardingModesSection />
           <BrownfieldSection />
           <RolesSection />
           <CommandsSection />

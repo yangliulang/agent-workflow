@@ -7,6 +7,11 @@ project:
     primary: PRD-simple.md
   onboarding:
     commander: handoff/pipeline/COMMANDER.md
+    mode: greenfield
+
+product:
+  inventory: handoff/product/inventory.md
+  backlog: handoff/product/backlog.yaml
 
 features:
   root: handoff/features
@@ -14,6 +19,8 @@ features:
 roadmap:
   glob: handoff/roadmap/phase-*.md
   default_phase_file: handoff/roadmap/phase-1.md
+  active_phase: 1
+  phase_capacity: 0
 
 apps:
   backend:
@@ -35,6 +42,7 @@ conventions:
     success_code: 0
 
 # Hook 提醒策略（.cursor/hooks/pipeline-status-reminder.sh 读取；hooks.json 路径不变）
+# 推荐：remind_on_write + stop_followup:false — 仅在写入 status.yaml 时提醒一次，避免 stop 反复续聊
 pipeline:
   hooks:
     enabled: true

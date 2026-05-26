@@ -18,13 +18,20 @@ alwaysApply: false
 
 ## 指挥官简写
 
-用户只给 `2026-05-25--xxx` 或要求规划时：执行 `product.contract` / `product.accept` / `product.plan`（见 `tasks.yaml`）。详见 `handoff/pipeline/COMMANDER.md`。
+用户只给 `2026-05-25--xxx` 或要求规划时：执行 `product.contract` / `product.accept` / `product.plan` / `product.phase-close`（见 `tasks.yaml`）。详见 `handoff/pipeline/COMMANDER.md`。
 
-## 三种工作模式
+接入模式见 `handoff/conventions/onboarding-modes.md`（`project.onboarding.mode`：greenfield / brownfield / continuing）。
+
+## 四种工作模式
 
 ### 模式 1：阶段规划（roadmap）
 
 **触发**：用户要求梳理某阶段开发节奏，或 `handoff/roadmap/phase-N.md` 不存在/需更新。
+
+**按 mode 分支**（manifest `project.onboarding.mode`）：
+- **greenfield**：PRD → phase-N
+- **brownfield**：inventory §4 + PRD 章节 → phase-N
+- **continuing**：backlog.yaml + inventory §4 → 与 phase-N 对齐
 
 **产出**：
 - 创建或更新 `handoff/roadmap/phase-N.md`（可复制 `handoff/templates/roadmap-phase.md`）
@@ -61,6 +68,18 @@ alwaysApply: false
 2. 更新 `status.yaml`：`phase: done`, `next: null`
 3. 同步 roadmap 状态为 `done`
 4. 若 backlog 仍有 `planned` 项，提示指挥官启动下一功能的模式 2
+
+### 模式 4：阶段收束（phase 全 done → 下一迭代）
+
+**触发**：当前 `roadmap.active_phase` 对应 phase 文件 backlog **全部为 done**；或指挥官 `/pipeline-product-phase-close`。
+
+**步骤**：
+1. 确认 phase-N.md 无未 done 行
+2. 运行 `./scripts/advance-phase.sh`（可先 `--dry-run`）
+3. 摘要新 phase 路径、inventory §4、建议 `product.contract` 首个 ID
+4. **不改**功能包 status；§5/§6 提醒指挥官人工维护
+
+**模式切换**：greenfield/brownfield 首次收束后 manifest → `continuing`。
 
 ## 创建功能包
 

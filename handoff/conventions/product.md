@@ -35,9 +35,12 @@
 
 PRD 往往包含已上线能力，**不要**从 PRD 第一章起把全部能力再排进 backlog。
 
-1. 指挥官先填 [inventory.md](../product/inventory.md)（已实现 / 进行中 / 本阶段要做 / 不做）
-2. 再执行 [brownfield-product-plan-prompt.md](../product/brownfield-product-plan-prompt.md) 中的 `product.plan` Prompt
-3. 仅对 backlog 里状态为 `planned` 的项执行 `product.contract`（一次一个）
+1. 设置 `project.onboarding.mode: brownfield`（续写迭代用 `continuing`）
+2. 填 [inventory.md](../product/inventory.md)，运行 `./scripts/seed-backlog-from-inventory.sh`
+3. 执行 [brownfield-product-plan-prompt.md](../product/brownfield-product-plan-prompt.md) 或 `/pipeline-product-plan`
+4. phase 全 `done` 后：`/pipeline-product-phase-close` 或 `./scripts/advance-phase.sh`
+
+模式说明：[onboarding-modes.md](onboarding-modes.md)
 
 ## 规划门禁（product.plan）
 
