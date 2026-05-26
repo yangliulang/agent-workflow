@@ -142,6 +142,7 @@ Skill 会读 `status.yaml` 的 `phase` + `next`，从 `tasks.yaml` 的 `next_tas
 | 目标 | 调用 |
 |------|------|
 | 从 PRD 拆 Phase 1 backlog | `/pipeline-product-plan` + 附上 PRD 或 `@你的PRD.md` |
+| **存量项目**（已开发过） | 先填 [inventory.md](../product/inventory.md)，再用 [brownfield-product-plan-prompt.md](../product/brownfield-product-plan-prompt.md) 调 `product.plan` |
 | 试跑极简功能 | 先 product-plan，再对 `2026-05-25--greeting` 走第 3 节 7 步 |
 
 ---

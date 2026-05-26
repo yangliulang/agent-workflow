@@ -31,6 +31,14 @@
 - 一行一功能；状态与功能包 `status.yaml` 同步
 - 模式 1 只排期，不写完整 brief（避免 backlog 与功能包重复维护）
 
+### 存量项目（已开发一段时间）
+
+PRD 往往包含已上线能力，**不要**从 PRD 第一章起把全部能力再排进 backlog。
+
+1. 指挥官先填 [inventory.md](../product/inventory.md)（已实现 / 进行中 / 本阶段要做 / 不做）
+2. 再执行 [brownfield-product-plan-prompt.md](../product/brownfield-product-plan-prompt.md) 中的 `product.plan` Prompt
+3. 仅对 backlog 里状态为 `planned` 的项执行 `product.contract`（一次一个）
+
 ## 规划门禁（product.plan）
 
 完成 `handoff/roadmap/phase-N.md` 后，对照 [product-plan 检查清单](../pipeline/checklists/product-plan.md)。  

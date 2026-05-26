@@ -32,6 +32,8 @@
 - [project.md](project.md) — 仓库结构、契约优先、禁止事项
 - [pipeline-project.md](pipeline-project.md) — `pipeline.project.yaml` 字段与迁移
 - [product.md](product.md) — brief / OpenAPI / backlog 写法
+- [../product/inventory.md](../product/inventory.md) — 存量项目切口清单（接入流水线前填写）
+- [../product/brownfield-product-plan-prompt.md](../product/brownfield-product-plan-prompt.md) — 存量 `product.plan` 可复制 Prompt
 - [backend.md](backend.md) — `apps/api/` 实现约定
 - [frontend.md](frontend.md) — `apps/web/` 实现约定
 - [testing.md](testing.md) — 用例、追溯矩阵、报告、自动化

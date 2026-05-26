@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import {
+  BROWNFIELD_INVENTORY_SECTIONS,
+  BROWNFIELD_LAYERS,
+  BROWNFIELD_PLAN_PROMPT,
+  BROWNFIELD_STEPS,
   COMMANDS,
   FAQ,
   METRICS,
   NAV_LINKS,
   PHASES,
+  REPO_MAIN,
   ROLES,
   STEPS,
 } from '../data/landing.js';
@@ -112,10 +117,10 @@ function Hero() {
               四步上手
             </a>
             <a
-              href="#commands"
+              href="#brownfield"
               className="inline-flex w-full items-center justify-center rounded-full border border-[var(--color-line)] bg-white px-5 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:border-teal-300/80 active:scale-[0.98] sm:w-auto sm:px-6"
             >
-              Skill 速查
+              存量接入
             </a>
           </div>
         </div>
@@ -282,6 +287,123 @@ function BindSection() {
   );
 }
 
+function BrownfieldSection() {
+  const [copied, setCopied] = useState(false);
+
+  async function copyPrompt() {
+    try {
+      await navigator.clipboard.writeText(BROWNFIELD_PLAN_PROMPT);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <section
+      id="brownfield"
+      className="scroll-mt-24 border-y border-[var(--color-line)] bg-gradient-to-b from-teal-50/40 to-[var(--color-surface-elevated)]/70 py-16 md:py-24"
+    >
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
+        <SectionHeader
+          eyebrow="Brownfield"
+          title="存量项目接入"
+          description="PRD 不必重抄一遍：用 inventory 划切口，roadmap 只排本阶段要做；已实现能力默认不建包、不走 7 步。"
+        />
+
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {BROWNFIELD_LAYERS.map((layer) => (
+            <article key={layer.title} className="card-surface rounded-2xl p-5 md:p-6">
+              <h3 className="font-semibold text-[var(--color-ink)]">{layer.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted)]">{layer.desc}</p>
+              <p className="mt-3 font-mono text-[11px] text-[var(--color-accent-deep)]">{layer.file}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 card-surface rounded-2xl p-5 md:p-6">
+          <h3 className="text-sm font-semibold text-[var(--color-ink)]">inventory.md 填哪些节</h3>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {BROWNFIELD_INVENTORY_SECTIONS.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-xl border border-[var(--color-line)] bg-zinc-50/60 px-4 py-3"
+              >
+                <p className="font-mono text-xs font-semibold text-[var(--color-accent-deep)]">
+                  {s.id} {s.label}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">{s.hint}</p>
+              </li>
+            ))}
+          </ul>
+          <a
+            href={`${REPO_MAIN}/handoff/product/inventory.md`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex text-sm font-medium text-[var(--color-accent-deep)] hover:underline"
+          >
+            打开仓库内 inventory 模板 →
+          </a>
+        </div>
+
+        <ol className="mt-10 grid list-none gap-6 lg:grid-cols-3">
+          {BROWNFIELD_STEPS.map((step) => (
+            <li key={step.n}>
+              <article className="card-surface flex h-full flex-col rounded-2xl p-6">
+                <span className="font-mono text-xs font-bold text-[var(--color-accent-deep)]">
+                  Step {step.n}
+                </span>
+                <h3 className="mt-2 text-lg font-semibold text-[var(--color-ink)]">{step.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--color-muted)]">
+                  {step.body}
+                </p>
+                {step.code && (
+                  <pre className="code-block mt-4 overflow-x-auto rounded-xl px-3 py-2.5 font-mono text-[11px] text-teal-300/95">
+                    <code>{step.code}</code>
+                  </pre>
+                )}
+                {step.doc && (
+                  <a
+                    href={step.doc}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 text-xs font-medium text-[var(--color-accent-deep)] hover:underline"
+                  >
+                    {step.docLabel} →
+                  </a>
+                )}
+              </article>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-10 card-surface overflow-hidden rounded-2xl">
+          <div className="flex flex-col gap-3 border-b border-[var(--color-line)] bg-zinc-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-ink)]">product.plan Prompt（可复制）</p>
+              <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                替换 <span className="font-mono">&lt;PRD_PATH&gt;</span>、
+                <span className="font-mono">&lt;N&gt;</span> 后粘贴到 Cursor
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyPrompt}
+              className="inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] px-4 py-2 text-xs font-medium text-white transition hover:bg-zinc-800 active:scale-[0.98]"
+            >
+              {copied ? '已复制' : '复制 Prompt'}
+            </button>
+          </div>
+          <pre className="code-block max-h-[min(420px,50vh)] overflow-auto px-4 py-4 font-mono text-[11px] leading-relaxed text-teal-300/95 sm:px-5 sm:text-xs">
+            <code>{BROWNFIELD_PLAN_PROMPT}</code>
+          </pre>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function RolesSection() {
   return (
     <section
@@ -435,6 +557,9 @@ function SiteFooter() {
           <a href="#bind" className="hover:text-white">
             上手
           </a>
+          <a href="#brownfield" className="hover:text-white">
+            存量接入
+          </a>
           <a href="#faq" className="hover:text-white">
             常见问题
           </a>
@@ -457,6 +582,7 @@ export default function LandingPage() {
           <OverviewSection />
           <PipelineSection />
           <BindSection />
+          <BrownfieldSection />
           <RolesSection />
           <CommandsSection />
           <FaqSection />

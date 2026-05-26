@@ -1,7 +1,12 @@
+/** 仓库 main 分支文档链接（GitHub Pages 展示站用） */
+export const REPO_MAIN =
+  'https://github.com/yangliulang/agent-workflow/blob/main';
+
 export const NAV_LINKS = [
   { href: '#overview', label: '产品导览' },
   { href: '#pipeline', label: '流水线' },
   { href: '#bind', label: '四步上手' },
+  { href: '#brownfield', label: '存量接入' },
   { href: '#roles', label: '角色' },
   { href: '#commands', label: 'Skill 速查' },
   { href: '#faq', label: '常见问题' },
@@ -35,7 +40,7 @@ export const STEPS = [
   {
     n: '02',
     title: '规划阶段 backlog',
-    body: '在 Cursor 中执行 /pipeline-product-plan，对齐 PRD，产出 handoff/roadmap/phase-N.md。',
+    body: '从 0：/pipeline-product-plan + @PRD。已开发过：先填 handoff/product/inventory.md，再用存量 Prompt（见「存量接入」）。',
     code: '/pipeline-product-plan',
   },
   {
@@ -97,6 +102,98 @@ export const COMMANDS = [
   { skill: '/pipeline-product-accept', feat: '功能 ID', note: '产品验收' },
 ];
 
+/** 存量项目：文档三层（避免 PRD 与 roadmap 重复） */
+export const BROWNFIELD_LAYERS = [
+  {
+    title: 'PRD（全量愿景）',
+    desc: '长期范围、历史已做、未来规划。接入时只读 inventory 标明的章节，不从第一章重排全部能力。',
+    file: 'project.prd.primary',
+  },
+  {
+    title: 'roadmap phase-N',
+    desc: '本阶段 backlog：一行一功能、优先级、依赖、状态。product.plan 只写表，不写 API 细节。',
+    file: 'handoff/roadmap/phase-1.md',
+  },
+  {
+    title: '功能包 features/…',
+    desc: '当前推进项的 brief、OpenAPI、测试追溯。仅 planned 项走 product.contract。',
+    file: 'handoff/features/YYYY-MM-DD--slug/',
+  },
+];
+
+export const BROWNFIELD_STEPS = [
+  {
+    n: '1',
+    title: '填 inventory 切口清单',
+    body: '对照代码与发布记录，区分已实现、进行中、本阶段要做、本阶段不做；指定第一个 contract 候选。',
+    doc: `${REPO_MAIN}/handoff/product/inventory.md`,
+    docLabel: 'inventory.md 模板',
+  },
+  {
+    n: '2',
+    title: '执行 product.plan',
+    body: '新开 Chat：/pipeline-product-plan，@inventory.md + @PRD（仅读 inventory §6 指向的章节）。产出 roadmap，不把已实现项写成 planned。',
+    doc: `${REPO_MAIN}/handoff/product/brownfield-product-plan-prompt.md`,
+    docLabel: '完整 Prompt 文档',
+  },
+  {
+    n: '3',
+    title: '定稿首个功能包',
+    body: '规划确认后，仅对 backlog 中第一个 P0、无依赖项执行 contract，再按流水线 7 步推进。',
+    code: '/pipeline-product-contract YYYY-MM-DD--your-slug',
+  },
+];
+
+/** 可复制到 Cursor 的 product.plan Prompt（与仓库 handoff 文档同步） */
+export const BROWNFIELD_PLAN_PROMPT = `/pipeline-product-plan
+
+你是 product-agent。遵守 handoff/conventions/product.md 与 handoff/pipeline/checklists/product-plan.md。
+
+## 输入
+
+1. @handoff/product/inventory.md（存量切口，以 §4「本阶段要做」为主）
+2. @<PRD_PATH>（全量 PRD；只参考 inventory §6 标明的章节 + 非功能，不要为 PRD 里「已实现」章节新建 backlog 行）
+3. 若已有 roadmap：@handoff/roadmap/phase-<N>.md
+
+## 任务
+
+创建或更新 handoff/roadmap/phase-<N>.md：
+
+1. **阶段目标**：1～3 句，只描述本阶段要证明/交付什么（来自 inventory §1、§4）
+2. **功能 backlog 表**：仅包含
+   - inventory §4「本阶段要做」
+   - inventory §3「进行中」中需要本阶段闭环的项
+   - inventory §2「需补契约」表中的项（若有）
+3. **不要**把 inventory §2「已实现」且无需补契约的项写成 \`planned\`（可省略，或在备注写「存量已实现」）
+4. **依赖与顺序**：根据 inventory 与 PRD 写清；首个 \`product.contract\` 候选 = inventory 指定的「第一个定稿候选」（须 P0、无依赖、可单功能包闭环）
+5. **本阶段不做**：来自 inventory §5
+6. **非功能**：来自 inventory §7 或 PRD 非功能节
+7. **不写**各功能包内的 brief、OpenAPI、测试用例（模式 1 只排期）
+
+## 功能 ID
+
+- 格式 \`YYYY-MM-DD--kebab-slug\`（双横线 \`--\`）
+- 优先采用 inventory / 进行中表里的「建议功能 ID」；缺失时用今天日期 + 合理 slug
+
+## 状态
+
+- 新列入且未建包：\`planned\`
+- 若指挥官说明某功能包已存在且 phase 非 done：roadmap 状态与功能包 \`status.yaml\` 对齐（\`contract_ready\` / \`in_dev\` / \`done\`）
+
+## 完成后
+
+- 对照 product-plan.md 检查清单自检，列出未勾选项（应为无）
+- 回复中明确：**下一行指挥官应执行的命令**（例：\`/pipeline-product-contract YYYY-MM-DD--slug\`）
+- **不要**在本步创建功能包或写 brief`;
+
+export const BROWNFIELD_INVENTORY_SECTIONS = [
+  { id: '§2', label: '已实现', hint: '默认不建包；仅「需补契约」可进 backlog' },
+  { id: '§3', label: '进行中', hint: '优先进本阶段 backlog' },
+  { id: '§4', label: '本阶段要做', hint: 'product.plan 主要依据' },
+  { id: '§5', label: '本阶段不做', hint: '写入 roadmap「本阶段不做」' },
+  { id: '§6', label: 'PRD 对应', hint: '标明从 PRD 哪几节读、哪几节跳过' },
+];
+
 export const FAQ = [
   {
     q: 'Agent Pipeline 是什么？',
@@ -121,6 +218,14 @@ export const FAQ = [
   {
     q: '演示应用在哪里？',
     a: '本仓库含 Express API 与 Vite 演示页（问候、登录等），用于验证流水线；本页为方案介绍站，业务 Demo 可另路由扩展。',
+  },
+  {
+    q: '项目已开发一段时间，PRD 里很多功能已做完，怎么列计划才不重复？',
+    a: '不要从 PRD 第一章把全部能力再排进 backlog。先填 handoff/product/inventory.md 划切口，再 product.plan 只生成「本阶段要做」的 roadmap 表；详细 AC 与 API 留在 product.contract 的功能包里。',
+  },
+  {
+    q: '已实现的功能还要走完整 7 步流水线吗？',
+    a: '不必。roadmap 可标 done 或省略；仅当需要补 OpenAPI/测试追溯或小改时，再为该能力建功能包并按缺项推进。',
   },
 ];
 
