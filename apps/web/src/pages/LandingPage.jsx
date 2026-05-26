@@ -6,6 +6,10 @@ import {
   BROWNFIELD_STEPS,
   COMMANDS,
   FAQ,
+  HOOKS_EVENTS,
+  HOOKS_OPTIONS,
+  HOOKS_PRESETS,
+  HOOKS_YAML_SNIPPET,
   METRICS,
   NAV_LINKS,
   PHASES,
@@ -241,6 +245,141 @@ function PipelineSection() {
               </li>
             ))}
         </ol>
+      </div>
+    </section>
+  );
+}
+
+function HooksSection() {
+  const [copied, setCopied] = useState(false);
+
+  async function copyYaml() {
+    try {
+      await navigator.clipboard.writeText(HOOKS_YAML_SNIPPET);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <section id="hooks" className="scroll-mt-24 py-16 md:py-24">
+      <div className="mx-auto max-w-7xl px-4 md:px-8">
+        <SectionHeader
+          eyebrow="Hooks"
+          title="status 变更提醒 · 可配置"
+          description="保存 status.yaml 后提示下一条 Skill；策略写在 pipeline.project.yaml → pipeline.hooks（.cursor/hooks.json 路径不变）。Hook 不自动执行下一步，也不代替门禁。"
+        />
+
+        <div className="mt-10 card-surface overflow-hidden rounded-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-[var(--color-line)] bg-zinc-50/80 text-xs text-[var(--color-muted)]">
+                  <th className="px-5 py-3.5 font-semibold">Cursor 事件</th>
+                  <th className="px-5 py-3.5 font-semibold">触发时机</th>
+                  <th className="px-5 py-3.5 font-semibold">输出</th>
+                  <th className="px-5 py-3.5 font-semibold">manifest 字段</th>
+                </tr>
+              </thead>
+              <tbody>
+                {HOOKS_EVENTS.map((row) => (
+                  <tr
+                    key={row.event}
+                    className="border-b border-[var(--color-line)] last:border-0"
+                  >
+                    <td className="whitespace-nowrap px-5 py-4 font-mono text-xs text-[var(--color-accent-deep)]">
+                      {row.event}
+                    </td>
+                    <td className="px-5 py-4 text-[var(--color-muted)]">{row.when}</td>
+                    <td className="whitespace-nowrap px-5 py-4 font-mono text-xs text-[var(--color-ink)]/80">
+                      {row.output}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 font-mono text-xs text-[var(--color-muted)]">
+                      {row.controlledBy}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {HOOKS_PRESETS.map((preset) => (
+            <article key={preset.title} className="card-surface rounded-2xl p-5 md:p-6">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-[var(--color-ink)]">{preset.title}</h3>
+                <span className="rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent-deep)]">
+                  {preset.tag}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted)]">{preset.desc}</p>
+              <pre className="code-block mt-4 overflow-x-auto rounded-lg px-3 py-2 font-mono text-[10px] leading-relaxed text-teal-300/90">
+                <code>
+                  {Object.entries(preset.config)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join('\n')}
+                </code>
+              </pre>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-10 card-surface overflow-hidden rounded-2xl">
+          <div className="border-b border-[var(--color-line)] bg-zinc-50/80 px-4 py-3 sm:px-5">
+            <p className="text-sm font-semibold text-[var(--color-ink)]">字段说明</p>
+          </div>
+          <ul className="divide-y divide-[var(--color-line)]">
+            {HOOKS_OPTIONS.map((opt) => (
+              <li
+                key={opt.key}
+                className="flex flex-col gap-1 px-4 py-4 sm:flex-row sm:items-start sm:gap-6 sm:px-5"
+              >
+                <span className="shrink-0 font-mono text-sm text-[var(--color-accent-deep)]">
+                  {opt.key}
+                </span>
+                <span className="shrink-0 font-mono text-xs text-[var(--color-muted)]">
+                  默认 {opt.default}
+                </span>
+                <span className="text-sm text-[var(--color-muted)]">{opt.desc}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-10 card-surface overflow-hidden rounded-2xl">
+          <div className="flex flex-col gap-3 border-b border-[var(--color-line)] bg-zinc-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div>
+              <p className="text-sm font-semibold text-[var(--color-ink)]">
+                pipeline.project.yaml 片段（可复制）
+              </p>
+              <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                修改后无需 sync；Cursor Settings → Hooks 确认已加载项目 hooks.json
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyYaml}
+              className="inline-flex shrink-0 items-center justify-center rounded-full bg-[var(--color-ink)] px-4 py-2 text-xs font-medium text-white transition hover:bg-zinc-800 active:scale-[0.98]"
+            >
+              {copied ? '已复制' : '复制 YAML'}
+            </button>
+          </div>
+          <pre className="code-block overflow-x-auto px-4 py-4 font-mono text-xs leading-relaxed text-teal-300/95 sm:px-5">
+            <code>{HOOKS_YAML_SNIPPET}</code>
+          </pre>
+        </div>
+
+        <a
+          href={`${REPO_MAIN}/handoff/pipeline/hooks.md`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-6 inline-flex text-sm font-medium text-[var(--color-accent-deep)] hover:underline"
+        >
+          仓库内完整说明 handoff/pipeline/hooks.md →
+        </a>
       </div>
     </section>
   );
@@ -554,6 +693,12 @@ function SiteFooter() {
           <a href="#overview" className="hover:text-white">
             产品导览
           </a>
+          <a href="#pipeline" className="hover:text-white">
+            流水线
+          </a>
+          <a href="#hooks" className="hover:text-white">
+            Hook 提醒
+          </a>
           <a href="#bind" className="hover:text-white">
             上手
           </a>
@@ -581,6 +726,7 @@ export default function LandingPage() {
           <MetricsStrip />
           <OverviewSection />
           <PipelineSection />
+          <HooksSection />
           <BindSection />
           <BrownfieldSection />
           <RolesSection />

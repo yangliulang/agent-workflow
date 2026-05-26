@@ -5,6 +5,7 @@ export const REPO_MAIN =
 export const NAV_LINKS = [
   { href: '#overview', label: '产品导览' },
   { href: '#pipeline', label: '流水线' },
+  { href: '#hooks', label: 'Hook 提醒' },
   { href: '#bind', label: '四步上手' },
   { href: '#brownfield', label: '存量接入' },
   { href: '#roles', label: '角色' },
@@ -34,7 +35,7 @@ export const STEPS = [
   {
     n: '01',
     title: '复制项目绑定',
-    body: '将 pipeline.project.yaml.example 复制为 pipeline.project.yaml，填写 PRD 路径、apps 目录与本地 API/Web 基址。',
+    body: '复制 pipeline.project.yaml，填写 PRD、apps 路径与 URL；可选配置 pipeline.hooks 控制 status 变更后的提醒策略（见「Hook 提醒」）。',
     code: 'cp pipeline.project.yaml.example pipeline.project.yaml',
   },
   {
@@ -194,6 +195,74 @@ export const BROWNFIELD_INVENTORY_SECTIONS = [
   { id: '§6', label: 'PRD 对应', hint: '标明从 PRD 哪几节读、哪几节跳过' },
 ];
 
+/** status.yaml 变更 Hook — 由 pipeline.project.yaml → pipeline.hooks 控制 */
+export const HOOKS_EVENTS = [
+  {
+    event: 'postToolUse',
+    when: 'Agent Write/StrReplace status.yaml',
+    output: 'additional_context',
+    controlledBy: 'remind_on_write',
+  },
+  {
+    event: 'stop',
+    when: '本轮 Agent 结束且近期改过 status',
+    output: 'followup_message',
+    controlledBy: 'stop_followup',
+  },
+];
+
+export const HOOKS_OPTIONS = [
+  {
+    key: 'enabled',
+    default: 'true',
+    desc: '总开关；false 时脚本直接退出，无任何提醒',
+  },
+  {
+    key: 'remind_on_write',
+    default: 'true',
+    desc: '写入 status.yaml 后是否向当前 Chat 注入下一条 /pipeline-* 提示',
+  },
+  {
+    key: 'stop_followup',
+    default: 'false',
+    desc: 'Agent 结束时是否 followup_message 自动续聊（仍不会自动执行 Skill）',
+  },
+  {
+    key: 'require_new_chat',
+    default: 'true',
+    desc: '文案是否强调「指挥官确认后新开 Chat，勿在本会话自动推进门禁」',
+  },
+];
+
+export const HOOKS_PRESETS = [
+  {
+    title: '推荐 · 需确认',
+    tag: '默认',
+    desc: '写入时有提醒；stop 不自动续聊。下一步由指挥官新开 Chat。',
+    config: { enabled: true, remind_on_write: true, stop_followup: false, require_new_chat: true },
+  },
+  {
+    title: '更自动',
+    tag: '半自动',
+    desc: '写入提醒 + 会话结束再跟一条 followup（不代替门禁与 Skill 执行）。',
+    config: { enabled: true, remind_on_write: true, stop_followup: true, require_new_chat: true },
+  },
+  {
+    title: '完全静默',
+    tag: '关闭',
+    desc: '不注入提醒；指挥官自行 cat status.yaml 或查 COMMANDER。',
+    config: { enabled: false, remind_on_write: false, stop_followup: false, require_new_chat: true },
+  },
+];
+
+export const HOOKS_YAML_SNIPPET = `# 追加到 pipeline.project.yaml（.cursor/hooks.json 路径不变）
+pipeline:
+  hooks:
+    enabled: true
+    remind_on_write: true
+    stop_followup: false      # false = 需指挥官新开 Chat（推荐）
+    require_new_chat: true`;
+
 export const FAQ = [
   {
     q: 'Agent Pipeline 是什么？',
@@ -226,6 +295,10 @@ export const FAQ = [
   {
     q: '已实现的功能还要走完整 7 步流水线吗？',
     a: '不必。roadmap 可标 done 或省略；仅当需要补 OpenAPI/测试追溯或小改时，再为该能力建功能包并按缺项推进。',
+  },
+  {
+    q: 'status 变更后 Hook 会自动执行下一步吗？',
+    a: '不会自动执行 Skill。Hook 只提醒下一条 /pipeline-* 命令；默认 stop_followup: false，需指挥官确认后新开 Chat。策略在 pipeline.project.yaml → pipeline.hooks 配置，改 YAML 即生效。',
   },
 ];
 

@@ -160,6 +160,7 @@ Skill 会读 `status.yaml` 的 `phase` + `next`，从 `tasks.yaml` 的 `next_tas
 ### Hook 下一步提醒
 
 保存 `handoff/features/*/status.yaml` 后，项目 Hook 会注入下一条 `/pipeline-*` 命令（见 [hooks.md](hooks.md)）。  
+策略由 **`pipeline.project.yaml` → `pipeline.hooks`** 控制（默认 `stop_followup: false`，需指挥官**新开 Chat** 再执行下一步）。  
 `phase: done` 或 `next: null` 时**不再提醒**；下一功能由指挥官按 roadmap 手动开 Chat。  
 **仍需**指挥官新开 Chat 执行；Hook 不代替 `status.yaml` 门禁核对。
 

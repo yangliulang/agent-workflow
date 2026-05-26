@@ -6,11 +6,26 @@
 
 | 事件 | 行为 |
 |------|------|
-| `postToolUse`（`Write` / `StrReplace`） | Agent 写入 `status.yaml` 后，向当前对话注入 `additional_context`（**每次推进都会提醒**） |
-| `stop` | 本轮 Agent 结束时，若 3 分钟内改过某功能包 `status.yaml`，自动提交 `followup_message` 续聊 |
+| `postToolUse`（`Write` / `StrReplace`） | Agent 写入 `status.yaml` 后，向当前对话注入 `additional_context`（**每次推进都会提醒**；可由 `pipeline.hooks.remind_on_write` 关闭） |
+| `stop` | 本轮 Agent 结束时，若 3 分钟内改过某功能包 `status.yaml`，可输出 `followup_message` 续聊（**默认关闭**，见 `pipeline.hooks.stop_followup`） |
 | `afterFileEdit` | 仅辅助识别路径；Cursor 官方未定义该事件的输出字段，**不依赖**其展示提醒 |
 
-策略：**fail-open**（脚本异常不阻断保存或结束会话）。
+策略：**fail-open**（脚本异常不阻断保存或结束会话）。**项目策略**在根目录 `pipeline.project.yaml` → `pipeline.hooks`（脚本运行时读取；`hooks.json` 路径不变）。
+
+### pipeline.hooks 开关
+
+| 字段 | 默认 | 说明 |
+|------|------|------|
+| `enabled` | `true` | `false` 时脚本直接退出，等同关闭 Hook |
+| `remind_on_write` | `true` | `false` 时不向当前 Chat 注入 `additional_context` |
+| `stop_followup` | `false` | `true` 时在 `stop` 事件输出 `followup_message`（更半自动） |
+| `require_new_chat` | `true` | 文案强调「指挥官确认后新开 Chat，勿在本会话自动推进门禁」 |
+
+**推荐（需用户确认再下一步）**：保持默认即可——写入时有提醒，`stop` 不自动续聊。
+
+**更自动**：`stop_followup: true`（仍不会自动执行 Skill，仅可能在本 Chat 多跟一句）。
+
+**完全静默**：`enabled: false`。
 
 ### 为何有时「状态变了却没有提醒」？
 

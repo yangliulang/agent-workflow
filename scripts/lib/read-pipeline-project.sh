@@ -48,6 +48,44 @@ pp_get() {
   '
 }
 
+# pp_get_optional <dot.path> [default] — 缺键或空值时返回 default（不 abort）
+pp_get_optional() {
+  local key="${1:?key required}"
+  local default="${2:-}"
+  if ! pp_require_file 2>/dev/null; then
+    printf '%s' "$default"
+    return 0
+  fi
+  export PIPELINE_PROJECT_FILE="$(_pp_file)"
+  export PP_KEY="$key"
+  export PP_DEFAULT="$default"
+  ruby -ryaml -e '
+    require "yaml"
+    path = ENV.fetch("PP_KEY")
+    default = ENV.fetch("PP_DEFAULT", "")
+    data = YAML.load_file(ENV.fetch("PIPELINE_PROJECT_FILE"))
+    val = path.split(".").reduce(data) { |m, k| m.is_a?(Hash) ? m[k] : nil }
+    if val.nil? || (val.respond_to?(:empty?) && val.empty?)
+      print default
+    else
+      print val
+    end
+  '
+}
+
+# pp_hooks_bool <dot.path> <default true|false>
+pp_hooks_bool() {
+  local key="${1:?key required}"
+  local default="${2:-true}"
+  local raw
+  raw="$(pp_get_optional "$key" "$default")"
+  case "$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]')" in
+    true|yes|1|on) printf 'true' ;;
+    false|no|0|off) printf 'false' ;;
+    *) printf '%s' "$default" ;;
+  esac
+}
+
 # 打印 tasks.yaml 常用占位符（供 Agent / 文档对照）
 pp_print_context() {
   pp_require_file || return 1

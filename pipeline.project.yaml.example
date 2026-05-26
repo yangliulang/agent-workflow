@@ -32,3 +32,10 @@ apps:
 conventions:
   api_response:
     success_code: 0
+
+pipeline:
+  hooks:
+    enabled: true
+    remind_on_write: true
+    stop_followup: false
+    require_new_chat: true

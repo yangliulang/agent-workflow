@@ -33,3 +33,11 @@ apps:
 conventions:
   api_response:
     success_code: 0
+
+# Hook 提醒策略（.cursor/hooks/pipeline-status-reminder.sh 读取；hooks.json 路径不变）
+pipeline:
+  hooks:
+    enabled: true
+    remind_on_write: true
+    stop_followup: false
+    require_new_chat: true

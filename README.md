@@ -32,7 +32,7 @@ source scripts/lib/read-pipeline-project.sh && pp_print_context
 cd apps/web && npm install && npm run dev
 ```
 
-浏览器打开 `http://localhost:5173` — 介绍方案架构、流水线阶段、四步上手、**存量项目 inventory 接入**与 Skill 速查。
+浏览器打开 `http://localhost:5173` — 介绍方案架构、流水线阶段、**Hook 提醒配置**、四步上手、存量 inventory 接入与 Skill 速查。
 
 #### 首次启用 GitHub Pages
 

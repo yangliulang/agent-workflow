@@ -9,6 +9,26 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+export PIPELINE_PROJECT_ROOT="$ROOT"
+
+HOOKS_ENABLED=true
+HOOKS_REMIND_ON_WRITE=true
+HOOKS_STOP_FOLLOWUP=false
+HOOKS_REQUIRE_NEW_CHAT=true
+
+if [ -f "$ROOT/scripts/lib/read-pipeline-project.sh" ]; then
+  # shellcheck source=scripts/lib/read-pipeline-project.sh
+  source "$ROOT/scripts/lib/read-pipeline-project.sh"
+  HOOKS_ENABLED="$(pp_hooks_bool pipeline.hooks.enabled true)"
+  HOOKS_REMIND_ON_WRITE="$(pp_hooks_bool pipeline.hooks.remind_on_write true)"
+  HOOKS_STOP_FOLLOWUP="$(pp_hooks_bool pipeline.hooks.stop_followup false)"
+  HOOKS_REQUIRE_NEW_CHAT="$(pp_hooks_bool pipeline.hooks.require_new_chat true)"
+fi
+
+if [ "$HOOKS_ENABLED" = "false" ]; then
+  exit 0
+fi
+
 INPUT="$(cat)"
 
 HOOK_EVENT=""
@@ -159,10 +179,16 @@ if [ -n "$SKILL" ]; then
   if [ "$PHASE" = "contract_ready" ] && [ "$NEXT" = "backend-agent" ]; then
     MSG="${MSG} 可选并行：\`/pipeline-test-prepare ${FEATURE_ID}\`、\`/pipeline-frontend-mock ${FEATURE_ID}\`。"
   fi
+  if [ "$HOOKS_REQUIRE_NEW_CHAT" = "true" ]; then
+    MSG="${MSG} **请指挥官确认后新开 Chat 执行**；勿在本会话自动推进 \`status.yaml\` 门禁。"
+  fi
 else
   MSG="【流水线】\`${FEATURE_ID}\` → \`phase: ${PHASE}\`，\`next: ${NEXT}\`。无自动映射任务，请执行 \`/pipeline-next ${FEATURE_ID}\` 或查阅 \`handoff/pipeline/COMMANDER.md\` §3。"
   if $HAS_BLOCKERS; then
     MSG="${MSG} \`blockers\` 非空，见 status.yaml。"
+  fi
+  if [ "$HOOKS_REQUIRE_NEW_CHAT" = "true" ]; then
+    MSG="${MSG} **请指挥官确认后新开 Chat**；勿在本会话自动推进。"
   fi
 fi
 
@@ -173,10 +199,16 @@ escape_json() {
 
 ESC_MSG="$(escape_json "$MSG")"
 
-# stop：自动续聊；其余（含 postToolUse）：注入 Agent 上下文
+# stop：可选自动续聊（pipeline.hooks.stop_followup）；其余：写入时注入上下文
 if [ "$HOOK_EVENT" = "stop" ]; then
+  if [ "$HOOKS_STOP_FOLLOWUP" != "true" ]; then
+    exit 0
+  fi
   printf '{"followup_message":%s}\n' "$ESC_MSG"
 else
+  if [ "$HOOKS_REMIND_ON_WRITE" != "true" ]; then
+    exit 0
+  fi
   printf '{"additional_context":%s}\n' "$ESC_MSG"
 fi
 exit 0

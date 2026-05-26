@@ -15,8 +15,26 @@
 | `apps.backend.dev.cors_origin` | 后端 CORS（写入 api-dev 规则） |
 | `apps.frontend.path` | 前端代码根 |
 | `apps.frontend.dev.base_url` | 前端 dev、E2E 环境说明 |
+| `pipeline.hooks.enabled` | 是否启用 status 变更 Hook 提醒（默认 `true`） |
+| `pipeline.hooks.remind_on_write` | Agent Write/StrReplace `status.yaml` 后是否注入提醒（默认 `true`） |
+| `pipeline.hooks.stop_followup` | Agent 结束时是否 `followup_message` 自动续聊（默认 `false` = 需指挥官新开 Chat） |
+| `pipeline.hooks.require_new_chat` | 提醒文案是否强调「确认后新开 Chat、勿自动推进」（默认 `true`） |
 
-## 常用命令
+## Hook 策略示例
+
+```yaml
+pipeline:
+  hooks:
+    enabled: true
+    remind_on_write: true
+    stop_followup: false      # 推荐：仅提示，不在 stop 时自动续聊
+    require_new_chat: true
+```
+
+- **完全关闭提醒**：`enabled: false`
+- **更自动（旧行为）**：`stop_followup: true`（写入提醒 + 会话结束跟一条）
+
+详见 [handoff/pipeline/hooks.md](../pipeline/hooks.md)。
 
 ```bash
 source scripts/lib/read-pipeline-project.sh && pp_print_context
