@@ -1,51 +1,51 @@
-# 本仓库项目绑定（Layer B）— 流水线框架通过此文件解析路径与 URL
-# 复制 pipeline.project.yaml.example 到新项目并修改；改路径后运行 ./scripts/sync-project-rules.sh
+# 本仓库项目绑定（Layer B）— 流水线框架读此文件解析路径、URL、Hook 策略
+# 改 apps.*.path 或 dev URL 后运行：./scripts/sync-project-rules.sh
+# 字段说明详见 handoff/conventions/pipeline-project.md
 
-project:
-  name: agent-pipeline-demo
+project:                          # 项目元信息与指挥官入口
+  name: agent-pipeline-demo       # 项目显示名（日志、文档引用）
   prd:
-    primary: PRD-simple.md
+    primary: PRD-simple.md        # 默认 PRD；/pipeline-product-plan 等任务对齐此文件
   onboarding:
-    commander: handoff/pipeline/COMMANDER.md
-    mode: greenfield
+    commander: handoff/pipeline/COMMANDER.md  # 指挥官手册；简写 /pipeline-* 时 Agent 查阅
+    mode: greenfield              # 接入模式：本 demo 从 0 规划（见 onboarding-modes.md）
 
-product:
-  inventory: handoff/product/inventory.md
-  backlog: handoff/product/backlog.yaml
+product:                          # 产品待办与存量
+  inventory: handoff/product/inventory.md  # 存量能力清单
+  backlog: handoff/product/backlog.yaml    # 全量待办队列
 
 features:
-  root: handoff/features
+  root: handoff/features          # 功能包根目录；格式 {root}/YYYY-MM-DD--slug/
 
-roadmap:
-  glob: handoff/roadmap/phase-*.md
-  default_phase_file: handoff/roadmap/phase-1.md
-  active_phase: 1
-  phase_capacity: 0
+roadmap:                          # 阶段规划
+  glob: handoff/roadmap/phase-*.md       # 阶段文件 glob
+  default_phase_file: handoff/roadmap/phase-1.md  # product.contract 默认阶段表
+  active_phase: 1                 # 当前阶段号
+  phase_capacity: 0               # 每阶段 backlog 切片上限；0=不限
 
-apps:
+apps:                             # 本仓库应用（tasks.yaml 用占位符，勿写死路径）
   backend:
-    path: apps/api
-    stack: express
+    path: apps/api                # 后端根目录
+    stack: express                # 技术栈标识
     dev:
-      command: "cd apps/api && npm run dev"
-      base_url: http://localhost:3000/api
-      cors_origin: http://localhost:5173
+      command: "cd apps/api && npm run dev"  # 本地启动命令
+      base_url: http://localhost:3000/api    # API 基址
+      cors_origin: http://localhost:5173     # CORS 允许的前端 Origin
   frontend:
-    path: apps/web
-    stack: vite-react
+    path: apps/web                # 前端根目录
+    stack: vite-react             # 技术栈标识
     dev:
-      command: "cd apps/web && npm run dev"
-      base_url: http://localhost:5173
+      command: "cd apps/web && npm run dev"  # 前端 dev 启动
+      base_url: http://localhost:5173        # 前端 dev 地址
 
 conventions:
   api_response:
-    success_code: 0
+    success_code: 0               # 统一成功响应 code（见 handoff/conventions/project.md）
 
-# Hook 提醒策略（.cursor/hooks/pipeline-status-reminder.sh 读取；hooks.json 路径不变）
-# 推荐：remind_on_write + stop_followup:false — 仅在写入 status.yaml 时提醒一次，避免 stop 反复续聊
+# Hook：status.yaml 变更提醒（.cursor/hooks/pipeline-status-reminder.sh；hooks.json 路径不变）
 pipeline:
   hooks:
-    enabled: true
-    remind_on_write: true
-    stop_followup: false
-    require_new_chat: true
+    enabled: true                 # 总开关
+    remind_on_write: true         # 写入 status.yaml 后注入下一条 /pipeline-*（推荐）
+    stop_followup: false          # false=不在 stop 自动续聊，避免同 Chat 反复提醒
+    require_new_chat: true        # 文案要求确认后新开 Chat，勿本会话推进门禁

@@ -23,11 +23,12 @@ tasks:
       你是 product-agent。遵守 .cursor/rules/product-agent.mdc 与 handoff/conventions/product.md。
       读取 pipeline.project.yaml（`project.onboarding.mode`、`product.*`、`roadmap.*`）。
       模式分支（详见 handoff/conventions/onboarding-modes.md）：
-      - **greenfield**：根据 PRD（{{prd_path}} 或用户附件）创建/更新 handoff/roadmap/phase-N.md。
-      - **brownfield**：读 {{inventory_path}}（§4、§6）与 PRD 指定章节；不把 §2 已实现写成 planned。
+      - **greenfield**：根据 PRD（{{prd_path}} 或用户附件）创建/更新 phase-N；若 {{inventory_path}} §2「已实现」已有条目，视为存量能力，**不得**再写入 backlog 为 planned（与 brownfield/continuing 一致）。
+      - **brownfield**：读 {{inventory_path}}（§2、§4、§6）与 PRD 指定章节；不把 §2 已实现写成 planned。
       - **continuing**：读 {{backlog_path}} 中 status=queued/in_phase 与 {{inventory_path}} §4；与当前 {{default_roadmap}} 对齐，不重复 §2 已实现。
       产出：阶段目标、backlog 表（功能 ID、优先级、依赖）、本阶段不做；不写 brief/OpenAPI。
-      完成后对照 handoff/pipeline/checklists/product-plan.md 自检；提示指挥官确认后再 product.contract。
+      完成后运行 `./scripts/sync-backlog-from-phase.sh`（可加 `--dry-run`），将当前 `roadmap.active_phase` 对应 phase 文件 backlog 表 merge 进 {{backlog_path}}（planned/进行中 → in_phase；done → done；不降级已有 done）。
+      对照 handoff/pipeline/checklists/product-plan.md 自检；提示指挥官确认后再 product.contract。
 
   product.phase-close:
     agent: product-agent
@@ -70,7 +71,10 @@ tasks:
     steps: |
       你是 product-agent。处理 {{feature_dir}}，phase 为 ui_reviewed。
       对照 brief.md 与 design/ui-review.md 逐项验收。
-      通过 → status.yaml phase: done，next: null；同步 roadmap 为 done。
+      通过 → status.yaml phase: done，next: null；**先**同步 roadmap 对应行为 done。
+      运行 `./scripts/check-phase-close-ready.sh`：
+      - 退出码 **0**（当前 phase 全部 done）→ 在回复中**醒目**提示指挥官**新开 Chat** 执行 `/pipeline-product-phase-close`（勿直接 plan；收束会把 done 项追加 inventory §2）。
+      - 退出码 **1** → 若 roadmap 仍有 planned/进行中项，提示 `/pipeline-product-contract <下一功能ID>`。
 
   backend.implement:
     agent: backend-agent

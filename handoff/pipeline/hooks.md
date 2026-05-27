@@ -45,7 +45,7 @@
 /pipeline-backend 2026-05-25--greeting
 ```
 
-- `phase: done` 或 `next: null`（空）→ **不提醒**（功能包已闭环；下一功能由指挥官按 roadmap 手动开 Chat）
+- `phase: done` 或 `next: null`（空）→ 若当前 roadmap 阶段**全部 done**，提醒 `/pipeline-product-phase-close`；否则通常不注入（下一项由 `product.accept` 或指挥官按 roadmap 开 Chat）
 - `contract_ready` + `backend-agent` → 额外提示可选 `test-prepare`、`frontend-mock`
 - 无法映射 → 建议 `/pipeline-next <功能ID>`
 

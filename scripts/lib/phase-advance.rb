@@ -7,6 +7,7 @@
 require "yaml"
 require "fileutils"
 require "date"
+require_relative "phase_roadmap"
 
 ROOT = ENV.fetch("PIPELINE_PROJECT_ROOT") { File.expand_path("../..", __dir__) }
 MANIFEST = File.join(ROOT, "pipeline.project.yaml")
@@ -32,37 +33,7 @@ def priority_rank(p)
 end
 
 def parse_phase_table(path)
-  abort "找不到 phase 文件: #{path}" unless File.file?(path)
-  rows = []
-  in_table = false
-  File.readlines(path, chomp: true, encoding: "UTF-8").each do |line|
-    if line.start_with?("## 功能 backlog")
-      in_table = false
-      next
-    end
-    if line.include?("| 优先级 |") && line.include?("功能 ID")
-      in_table = true
-      next
-    end
-    next unless in_table
-    break if line.strip.empty?
-    next unless line.start_with?("|")
-    next if line.match?(/^\|[\s\-:|]+\|$/)
-
-    cols = line.split("|").map(&:strip).reject(&:empty?)
-    next if cols.size < 4
-    next if cols[0] == "优先级"
-
-    rows << {
-      priority: cols[0],
-      feature_id: cols[1],
-      title: cols[2],
-      status: cols[3].to_s.strip,
-      path: cols[4].to_s.strip,
-      note: cols[5].to_s.strip
-    }
-  end
-  rows
+  PhaseRoadmap.parse_phase_table(path)
 end
 
 def replace_inventory_section(inventory_path, marker, row_arrays, header_cols)
@@ -180,7 +151,7 @@ end
 phase_rows = parse_phase_table(phase_path)
 abort "phase-#{active_phase} backlog 为空" if phase_rows.empty?
 
-not_done = phase_rows.reject { |r| r[:status] == "done" }
+not_done = phase_rows.reject { |r| PhaseRoadmap.row_effectively_done?(ROOT, r) }
 unless not_done.empty?
   abort "phase-#{active_phase} 尚有未 done 项: #{not_done.map { |r| r[:feature_id] }.join(', ')}"
 end

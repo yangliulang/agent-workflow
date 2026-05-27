@@ -11,4 +11,4 @@ Parse **功能 ID** from the user message.
 1. Task: `product.accept` in `handoff/pipeline/tasks.yaml`
 2. Follow `.cursor/rules/product-agent.mdc`
 
-Execute `product.accept` now.
+Execute `product.accept` now. After marking done, run `./scripts/check-phase-close-ready.sh`; if exit 0, prominently tell the commander to open a new Chat for `/pipeline-product-phase-close`.

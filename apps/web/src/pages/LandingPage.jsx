@@ -273,7 +273,7 @@ function HooksSection() {
         <SectionHeader
           eyebrow="Hooks"
           title="status 变更提醒 · 可配置"
-          description="保存 status.yaml 后提示下一条 Skill；策略写在 pipeline.project.yaml → pipeline.hooks（.cursor/hooks.json 路径不变）。Hook 不自动执行下一步，也不代替门禁。"
+          description="保存 status.yaml 后提示下一条 Skill；阶段全部 done 时提醒 phase-close。策略写在 pipeline.project.yaml → pipeline.hooks。"
         />
 
         <div className="mt-10 card-surface overflow-hidden rounded-2xl">
@@ -452,7 +452,7 @@ function OnboardingModesSection() {
         <SectionHeader
           eyebrow="Onboarding Modes"
           title="三种接入模式"
-          description="由 pipeline.project.yaml → project.onboarding.mode 区分：从 0 新建、存量首次接入、续写迭代。product.plan 与 phase-close 按模式分支，避免每次重填全盘 inventory。"
+          description="由 pipeline.project.yaml → project.onboarding.mode 区分：从 0 新建、存量首次接入、续写迭代。product.plan 写 phase 后 sync-backlog；phase 全 done 后 phase-close 收束 inventory §2。"
         />
 
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
@@ -497,8 +497,9 @@ function OnboardingModesSection() {
             ))}
           </ul>
           <p className="mt-4 text-xs leading-relaxed text-[var(--color-muted)]">
-            首次 phase-close：当前 phase 的 done 行写入 inventory §2，并初始化 backlog.yaml。continuing
-            下 advance-phase 从 backlog 的 queued 按优先级填入 inventory §4，生成 phase-(N+1).md。
+            首次 phase-close：当前 phase 的 done 行追加 inventory §2。continuing 下 product.plan 后
+            sync-backlog 写回 backlog；或从 queued 切片 advance-phase 生成 phase-(N+1).md。阶段全部
+            done 时 Hook 与 product.accept 会提醒 phase-close。
           </p>
         </div>
 

@@ -10,4 +10,4 @@ disable-model-invocation: true
 2. Follow `.cursor/rules/product-agent.mdc`
 3. Use any PRD or product doc the user attached. Read `pipeline.project.yaml` → `project.onboarding.mode` first.
 
-Execute `product.plan` now.
+Execute `product.plan` now. After updating `handoff/roadmap/phase-N.md`, run `./scripts/sync-backlog-from-phase.sh` (optional `--dry-run` first) to merge the phase backlog table into `handoff/product/backlog.yaml`.

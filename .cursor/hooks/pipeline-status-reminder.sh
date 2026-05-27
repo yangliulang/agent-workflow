@@ -119,8 +119,31 @@ if grep -qE '^blockers:' "$STATUS_FILE" && ! grep -qE '^blockers:[[:space:]]*\[\
   fi
 fi
 
-# 功能已闭环（next: null / 空，或 phase: done）→ 不再注入提醒
+# 功能已闭环（next: null / 空，或 phase: done）
 if [ "$PHASE" = "done" ] || [ "$NEXT" = "null" ] || [ -z "$NEXT" ]; then
+  if command -v ruby >/dev/null 2>&1 && [ -f "$ROOT/scripts/lib/phase-close-ready.rb" ]; then
+    PHASE_CLOSE_JSON="$(ruby "$ROOT/scripts/lib/phase-close-ready.rb" --json 2>/dev/null || true)"
+    if [ -n "$PHASE_CLOSE_JSON" ]; then
+      PHASE_CLOSE_READY="$(printf '%s' "$PHASE_CLOSE_JSON" | python3 -c 'import json,sys; print("true" if json.load(sys.stdin).get("ready") else "false")' 2>/dev/null || echo "false")"
+      if [ "$PHASE_CLOSE_READY" = "true" ]; then
+        ACTIVE_PHASE="$(printf '%s' "$PHASE_CLOSE_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("active_phase",""))' 2>/dev/null || echo "?")"
+        MSG="【流水线】阶段 \`phase-${ACTIVE_PHASE}\` **已全部 done**。请先**新开 Chat** 执行 \`/pipeline-product-phase-close\`（本阶段完成项追加到 inventory §2，并切片下一迭代）。**勿**直接 \`/pipeline-product-plan\`，以免按 PRD 重复规划已完成部分。"
+        if [ "$HOOKS_REQUIRE_NEW_CHAT" = "true" ]; then
+          MSG="${MSG} 请指挥官确认后新开 Chat；勿在本会话自动运行 \`advance-phase\`。"
+        fi
+        escape_json() {
+          printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))' 2>/dev/null || \
+            printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g;s/$/\\n/' | tr -d '\n' | sed 's/\\n$//'
+        }
+        ESC_MSG="$(escape_json "$MSG")"
+        if [ "$HOOK_EVENT" = "stop" ]; then
+          printf '{"followup_message":%s}\n' "$ESC_MSG"
+        else
+          printf '{"additional_context":%s}\n' "$ESC_MSG"
+        fi
+      fi
+    fi
+  fi
   exit 0
 fi
 

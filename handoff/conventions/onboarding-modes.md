@@ -8,7 +8,7 @@
 |------|------|-------------|----------|
 | **`greenfield`** | 从 0 新项目 | PRD + `product.plan` 直接写 `phase-1.md` | `/pipeline-product-plan` @PRD → contract → 7 步 |
 | **`brownfield`** | 存量项目**首次**接入流水线 | 先 `inventory.md` §4，再 `seed-backlog` → `backlog.yaml` | 填 inventory → seed-backlog → plan → 7 步 |
-| **`continuing`** | 已接入，**续写下一迭代** | `handoff/product/backlog.yaml` 队列顺序 | 改 backlog 优先级 → `advance-phase` 或 `phase-close` → plan 审 diff → contract |
+| **`continuing`** | 已接入，**续写下一迭代** | `handoff/product/backlog.yaml` 队列顺序 | plan 对齐 PRD/roadmap 并 **sync-backlog** → contract；或改 backlog 优先级 → phase-close 切片 |
 
 ## manifest 字段
 
@@ -34,25 +34,28 @@ roadmap:
 greenfield ──(phase 全部 done + phase-close)──► continuing
 brownfield ──(phase 全部 done + phase-close)──► continuing
 
+continuing ──(product.plan + sync-backlog)──► phase-N 与 backlog 对齐 ──► contract
 continuing ──(改 backlog.yaml 优先级)──► advance-phase / phase-close ──► 下一 phase-N.md
 ```
 
 - **首次** `phase-close`：把当前 phase 的 `done` 行写入 `inventory` §2，并初始化/更新 `backlog.yaml`。
-- **continuing** 下：`advance-phase.sh` 从 `backlog.yaml` 的 `queued` 按优先级填入 `inventory` §4，并生成 `phase-(N+1).md`。
+- **continuing** 下：`advance-phase.sh` 从 `backlog.yaml` 的 `queued` 按优先级切片；**`product.plan` 后**运行 `sync-backlog-from-phase.sh` 将 phase 表写回 backlog（planned → `in_phase`）。
 
 ## 命令速查
 
 | 命令 | 模式 |
 |------|------|
 | `./scripts/seed-backlog-from-inventory.sh` | brownfield（inventory §4 → backlog.yaml） |
+| `./scripts/sync-backlog-from-phase.sh` | plan 后（phase 表 → backlog.yaml） |
+| `./scripts/check-phase-close-ready.sh` | 任意（当前 phase 是否全部 done；退出码 0 = 可 phase-close） |
 | `./scripts/advance-phase.sh` | continuing（或 phase 已全 done 的 brownfield） |
 | `/pipeline-product-phase-close` | 同上（Agent 执行 phase-close 任务） |
-| `/pipeline-product-plan` | 三模式均可；**continuing** 时读 backlog + inventory，**greenfield** 时读 PRD |
+| `/pipeline-product-plan` | 三模式均可；完成后 **sync-backlog**；continuing 读 backlog + inventory 对齐 |
 
 ## 仍建议人工维护
 
 - `inventory` §1 切口说明、§5 本阶段不做、§6 PRD 章节映射
-- `backlog.yaml` 增删能力、调 `deferred`
+- `backlog.yaml` 增删 **`deferred`**、调未进当前 phase 的 **`queued`** 优先级（plan 已 sync 本阶段行）
 - `product.plan` 后指挥官确认 diff
 
 详见 [product.md](product.md)、[../product/inventory.md](../product/inventory.md)。

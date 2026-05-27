@@ -84,9 +84,9 @@ PRD 路径（见 `pipeline.project.yaml` → `project.prd.primary`）：
 
 ## 7. 后续迭代（不必重走完整存量流程）
 
-1. 在 **`handoff/product/backlog.yaml`** 调整 `queued` 项与优先级（SSOT）。
+1. 在 **`handoff/product/backlog.yaml`** 调整未进当前 phase 的 `queued` / `deferred` 与优先级（本阶段行由 **plan + sync-backlog** 维护）。
 2. 当前 phase 全部 `done` 后：`./scripts/advance-phase.sh`（或 `/pipeline-product-phase-close`）。
-3. 审 diff → `/pipeline-product-plan`（可选）→ `/pipeline-product-contract`。
+3. 新开阶段：`/pipeline-product-plan`（自动 `./scripts/sync-backlog-from-phase.sh`）→ `/pipeline-product-contract`。
 
 ---
 

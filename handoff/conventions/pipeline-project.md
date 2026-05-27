@@ -56,6 +56,8 @@ product:
 source scripts/lib/read-pipeline-project.sh && pp_print_context
 ./scripts/sync-project-rules.sh
 ./scripts/seed-backlog-from-inventory.sh   # brownfield
+./scripts/sync-backlog-from-phase.sh       # product.plan 后
+./scripts/check-phase-close-ready.sh       # 是否可 phase-close
 ./scripts/advance-phase.sh                  # phase 全 done 后
 ```
 

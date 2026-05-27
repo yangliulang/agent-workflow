@@ -147,6 +147,15 @@ Skill 会读 `status.yaml` 的 `phase` + `next`，从 `tasks.yaml` 的 `next_tas
 | **续写下一迭代** | 改 `backlog.yaml` 优先级 → phase 全 done → `/pipeline-product-phase-close` |
 | 试跑极简功能 | 先 product-plan，再对 `2026-05-25--greeting` 走第 3 节 7 步 |
 
+### 阶段收束门禁（phase 全 done 后必做）
+
+当前 `roadmap/phase-N.md` backlog **全部为 `done`** 时（最后一个功能验收后 Hook 也会提醒）：
+
+1. **先** `/pipeline-product-phase-close`（或 `./scripts/advance-phase.sh`）— 把本阶段 done 项**追加**到 `inventory.md` §2，切片下一批到 §4，生成 `phase-(N+1).md`，`mode` → `continuing`
+2. **再** `/pipeline-product-plan` 审 diff（会 **sync-backlog**），或 `/pipeline-product-contract <首个 ID>`（若 phase 已由 advance-phase 生成）
+
+**勿**在收束前直接 plan：greenfield 下 plan 仍读 PRD，会重复规划 §2 未写入的已完成能力。自检：`./scripts/check-phase-close-ready.sh`（退出码 0 = 可收束）。
+
 ---
 
 ## 7. 质量门禁（规划与定稿）
@@ -163,7 +172,7 @@ Skill 会读 `status.yaml` 的 `phase` + `next`，从 `tasks.yaml` 的 `next_tas
 
 保存 `handoff/features/*/status.yaml` 后，项目 Hook 会注入下一条 `/pipeline-*` 命令（见 [hooks.md](hooks.md)）。  
 策略由 **`pipeline.project.yaml` → `pipeline.hooks`** 控制（默认 `stop_followup: false`，需指挥官**新开 Chat** 再执行下一步）。  
-`phase: done` 或 `next: null` 时**不再提醒**；下一功能由指挥官按 roadmap 手动开 Chat。  
+功能 `phase: done` 时：若当前 roadmap 阶段**尚未**全部 done，Hook 通常不跟下一条；若**已全部 done**，会提醒 `/pipeline-product-phase-close`（勿直接 plan）。  
 **仍需**指挥官新开 Chat 执行；Hook 不代替 `status.yaml` 门禁核对。
 
 ---

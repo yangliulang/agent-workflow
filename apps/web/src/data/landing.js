@@ -42,7 +42,7 @@ export const STEPS = [
   {
     n: '02',
     title: '规划阶段 backlog',
-    body: 'greenfield：/pipeline-product-plan + @PRD。brownfield：先填 inventory → seed-backlog。continuing：改 backlog.yaml → advance-phase 或 phase-close。',
+    body: 'greenfield：/pipeline-product-plan + @PRD（结束 sync-backlog）。brownfield：inventory → seed-backlog → plan。continuing：phase-close 或 plan + sync-backlog → contract。',
     code: '/pipeline-product-plan',
   },
   {
@@ -94,8 +94,8 @@ export const ROLES = [
 
 export const COMMANDS = [
   { skill: '/pipeline-next', feat: '功能 ID', note: '按 status 自动选任务' },
-  { skill: '/pipeline-product-plan', feat: '—', note: '阶段规划（按 mode 分支）' },
-  { skill: '/pipeline-product-phase-close', feat: '—', note: '阶段收尾 → continuing' },
+  { skill: '/pipeline-product-plan', feat: '—', note: '阶段规划 + sync-backlog' },
+  { skill: '/pipeline-product-phase-close', feat: '—', note: '阶段收束 → inventory §2' },
   { skill: '/pipeline-product-contract', feat: '功能 ID', note: '建包定稿' },
   { skill: '/pipeline-backend', feat: '功能 ID', note: '实现 API' },
   { skill: '/pipeline-test-api', feat: '功能 ID', note: 'API 测试' },
@@ -112,7 +112,7 @@ export const ONBOARDING_MODES = [
     title: 'greenfield',
     subtitle: '从 0 新建',
     ssot: 'PRD + product.plan',
-    flow: '/pipeline-product-plan @PRD → phase-1 → contract → 7 步',
+    flow: '/pipeline-product-plan @PRD → sync-backlog → contract → 7 步',
     when: '全新项目，尚无存量代码或 inventory',
   },
   {
@@ -120,7 +120,7 @@ export const ONBOARDING_MODES = [
     title: 'brownfield',
     subtitle: '存量首次接入',
     ssot: 'inventory.md §4 → backlog.yaml',
-    flow: '填 inventory → seed-backlog → plan → contract → 7 步',
+    flow: '填 inventory → seed-backlog → plan + sync-backlog → contract → 7 步',
     when: '已有代码/发布记录，第一次接入流水线',
   },
   {
@@ -128,7 +128,7 @@ export const ONBOARDING_MODES = [
     title: 'continuing',
     subtitle: '续写下一迭代',
     ssot: 'backlog.yaml 队列',
-    flow: '改 backlog 优先级 → advance-phase / phase-close → plan 审 diff',
+    flow: 'phase-close → plan + sync-backlog → contract；或改 queued 后 advance-phase',
     when: '至少完成一个 phase；不必每次重填全盘 inventory',
   },
 ];
@@ -136,7 +136,8 @@ export const ONBOARDING_MODES = [
 export const ONBOARDING_TRANSITIONS = [
   'greenfield ──(phase 全 done + phase-close)──► continuing',
   'brownfield ──(phase 全 done + phase-close)──► continuing',
-  'continuing ──(改 backlog.yaml)──► advance-phase ──► phase-(N+1).md',
+  'continuing ──(product.plan + sync-backlog)──► phase-N 与 backlog 对齐',
+  'continuing ──(改 backlog queued)──► advance-phase ──► phase-(N+1).md',
 ];
 
 export const ONBOARDING_COMMANDS = [
@@ -146,19 +147,29 @@ export const ONBOARDING_COMMANDS = [
     desc: 'inventory §4 → backlog.yaml',
   },
   {
+    cmd: './scripts/sync-backlog-from-phase.sh',
+    modes: '三模式',
+    desc: 'product.plan 后：phase 表 → backlog（planned → in_phase）',
+  },
+  {
+    cmd: './scripts/check-phase-close-ready.sh',
+    modes: '任意',
+    desc: '当前 phase 是否全部 done（退出码 0 = 可 phase-close）',
+  },
+  {
     cmd: './scripts/advance-phase.sh',
     modes: 'continuing',
-    desc: '从 backlog 生成下一 phase，更新 inventory §4',
+    desc: 'phase 全 done：§2 收束 + 从 queued 切片下一 phase',
   },
   {
     cmd: '/pipeline-product-phase-close',
     modes: 'brownfield / continuing',
-    desc: '阶段收尾：done 项写入 inventory §2，切换 mode',
+    desc: 'Agent 执行 advance-phase；done 写入 inventory §2',
   },
   {
     cmd: '/pipeline-product-plan',
     modes: '三模式',
-    desc: 'continuing 读 backlog；greenfield 读 PRD；brownfield 读 inventory',
+    desc: '写 phase-N.md；完成后须 sync-backlog-from-phase',
   },
 ];
 
@@ -183,7 +194,7 @@ export const BROWNFIELD_LAYERS = [
   },
   {
     title: 'roadmap phase-N',
-    desc: '本阶段 backlog：一行一功能、优先级、依赖、状态。product.plan 只写表，不写 API 细节。',
+    desc: '本阶段 backlog：一行一功能、优先级、依赖、状态。product.plan 写表后 sync-backlog 写回 backlog.yaml。',
     file: 'handoff/roadmap/phase-1.md',
   },
   {
@@ -204,13 +215,13 @@ export const BROWNFIELD_STEPS = [
   {
     n: '2',
     title: 'seed-backlog + product.plan',
-    body: '运行 seed-backlog 把 §4 写入 backlog.yaml；新开 Chat 执行 /pipeline-product-plan，@inventory + @PRD 指定章节。',
+    body: '运行 seed-backlog 把 §4 写入 backlog.yaml；/pipeline-product-plan 后自动 ./scripts/sync-backlog-from-phase.sh。',
     code: './scripts/seed-backlog-from-inventory.sh',
   },
   {
     n: '3',
     title: '定稿首个功能包',
-    body: '规划确认后，仅对 backlog 中第一个 P0、无依赖项执行 contract，再按流水线 7 步推进；phase 全 done 后 phase-close → continuing。',
+    body: '规划确认后 contract 首个 P0；phase 全 done 后 check-phase-close-ready → phase-close → continuing。',
     code: '/pipeline-product-contract YYYY-MM-DD--your-slug',
   },
 ];
@@ -253,6 +264,7 @@ export const BROWNFIELD_PLAN_PROMPT = `/pipeline-product-plan
 
 ## 完成后
 
+- 运行 \`./scripts/sync-backlog-from-phase.sh\`（可加 \`--dry-run\`），将 phase backlog 表 merge 进 backlog.yaml
 - 对照 product-plan.md 检查清单自检，列出未勾选项（应为无）
 - 回复中明确：**下一行指挥官应执行的命令**（例：\`/pipeline-product-contract YYYY-MM-DD--slug\`）
 - **不要**在本步创建功能包或写 brief`;
@@ -368,15 +380,19 @@ export const FAQ = [
   },
   {
     q: 'status 变更后 Hook 会自动执行下一步吗？',
-    a: '不会自动执行 Skill。Hook 只提醒下一条 /pipeline-* 命令；默认 stop_followup: false，需指挥官确认后新开 Chat。策略在 pipeline.project.yaml → pipeline.hooks 配置，改 YAML 即生效。',
+    a: '不会自动执行 Skill。Hook 在写入 status 后提示下一条 /pipeline-*；阶段全部 done 时提醒 /pipeline-product-phase-close。默认 stop_followup: false。策略见 pipeline.project.yaml → pipeline.hooks。',
   },
   {
     q: 'greenfield、brownfield、continuing 有什么区别？',
-    a: '在 pipeline.project.yaml 设置 project.onboarding.mode：greenfield 从 0 用 PRD 排 phase-1；brownfield 存量首次接入，先填 inventory 再 seed-backlog；continuing 续写迭代，用 backlog.yaml 驱动 advance-phase，不必每次重走全盘盘点。',
+    a: 'pipeline.project.yaml → project.onboarding.mode：greenfield 用 PRD 排 phase-1；brownfield 先填 inventory 再 seed-backlog；continuing 用 backlog 队列，plan 后 sync-backlog，phase 全 done 后 phase-close 写入 inventory §2。',
   },
   {
     q: '第一个 phase 做完后 mode 要改吗？',
-    a: '执行 /pipeline-product-phase-close 或 ./scripts/advance-phase.sh 后，框架会把 mode 切到 continuing，并把 done 项写入 inventory §2。之后只需维护 backlog 优先级即可开下一 phase。',
+    a: '执行 /pipeline-product-phase-close 或 ./scripts/advance-phase.sh 后 mode → continuing，done 项追加 inventory §2。下一迭代：plan + sync-backlog，或先补 backlog queued 再 advance-phase。',
+  },
+  {
+    q: 'product.plan 会自动更新 backlog.yaml 吗？',
+    a: '会。plan 完成后须运行 ./scripts/sync-backlog-from-phase.sh（已写入 product.plan 任务步骤）：phase 表 planned → backlog in_phase，done → done，不降级已有 done。',
   },
 ];
 

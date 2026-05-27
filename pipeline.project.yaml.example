@@ -1,49 +1,51 @@
-# 项目绑定模板 — 复制为 pipeline.project.yaml 并按仓库结构调整
+# 项目绑定模板（Layer B）— 流水线框架读此文件解析路径、URL、Hook 策略
+# 用法：复制为 pipeline.project.yaml → 按仓库改值 → 运行 ./scripts/sync-project-rules.sh
+# 字段说明详见 handoff/conventions/pipeline-project.md
 
-project:
-  name: my-app
+project:                          # 项目元信息与指挥官入口
+  name: my-app                    # 项目显示名（日志、文档引用；非包名）
   prd:
-    primary: handoff/product/prd.md
+    primary: handoff/product/prd.md  # 默认 PRD 路径；/pipeline-product-plan 等任务对齐此文件
   onboarding:
-    commander: handoff/pipeline/COMMANDER.md
-    # greenfield=从0 | brownfield=存量首次接入 | continuing=续写迭代
-    mode: greenfield
+    commander: handoff/pipeline/COMMANDER.md  # 指挥官手册路径；简写 /pipeline-* 时 Agent 查阅
+    mode: greenfield              # 接入模式：greenfield=从0 | brownfield=存量首次 | continuing=续写迭代
 
-product:
-  inventory: handoff/product/inventory.md
-  backlog: handoff/product/backlog.yaml
+product:                          # 产品待办与存量（brownfield/continuing 用）
+  inventory: handoff/product/inventory.md  # 存量能力清单；brownfield 填 §4 切口，phase-close 回写 §2
+  backlog: handoff/product/backlog.yaml    # 全量待办队列；continuing 调优先级后 advance-phase 切片
 
 features:
-  root: handoff/features
+  root: handoff/features          # 功能包根目录；单功能为 {root}/YYYY-MM-DD--slug/
 
-roadmap:
-  glob: handoff/roadmap/phase-*.md
-  default_phase_file: handoff/roadmap/phase-1.md
-  active_phase: 1
-  phase_capacity: 0
+roadmap:                          # 阶段规划与 backlog 切片
+  glob: handoff/roadmap/phase-*.md       # 阶段文件匹配；product.plan 可列出多阶段
+  default_phase_file: handoff/roadmap/phase-1.md  # product.contract 默认读取的当前阶段表
+  active_phase: 1                 # 当前阶段号；advance-phase.sh 推进后递增
+  phase_capacity: 0               # 每阶段从 backlog 最多切片条数；0=不限制
 
-apps:
+apps:                             # 本仓库应用代码与本地 dev（勿在 tasks.yaml 写死路径）
   backend:
-    path: apps/api
-    stack: express
+    path: apps/api                # 后端代码根；sync-project-rules 生成 api-dev.mdc 的 glob
+    stack: express                # 技术栈标识；Agent 规则与 Skill 选用实现约定
     dev:
-      command: "cd apps/api && npm run dev"
-      base_url: http://localhost:3000/api
-      cors_origin: http://localhost:5173
+      command: "cd apps/api && npm run dev"  # 本地启动命令（文档/Skill 引用，Hook 不执行）
+      base_url: http://localhost:3000/api    # API 基址；OpenAPI servers、curl、联调、E2E 后端
+      cors_origin: http://localhost:5173     # 允许的前端 Origin；写入 api-dev CORS 说明
   frontend:
-    path: apps/web
-    stack: vite-react
+    path: apps/web                # 主前端代码根；sync 生成 web-dev.mdc
+    stack: vite-react             # 技术栈标识
     dev:
-      command: "cd apps/web && npm run dev"
-      base_url: http://localhost:5173
+      command: "cd apps/web && npm run dev"  # 前端 dev 启动命令
+      base_url: http://localhost:5173        # 前端 dev 地址；E2E、联调、UI 验收说明
 
-conventions:
+conventions:                      # 与代码/契约一致的项目级约定
   api_response:
-    success_code: 0
+    success_code: 0               # 统一成功体 code 字段（{ code, message, data }）；Agent 与 OpenAPI 对齐
 
+# Hook：status.yaml 变更后的下一步提醒（.cursor/hooks/pipeline-status-reminder.sh 读取）
 pipeline:
   hooks:
-    enabled: true
-    remind_on_write: true   # 写入 status.yaml 后注入下一条 Skill（每推进一次提醒一次）
-    stop_followup: false    # true 时 stop 跟 followup_message，易与同 Chat「勿推进」空转
-    require_new_chat: true
+    enabled: true                 # false=脚本直接退出，等同关闭 Hook
+    remind_on_write: true         # Agent Write/StrReplace status.yaml 后注入 additional_context（每推进一次提醒一次）
+    stop_followup: false          # true=每轮 stop 输出 followup_message；易与 require_new_chat 同 Chat 空转
+    require_new_chat: true        # 提醒文案强调「指挥官确认后新开 Chat，勿在本会话自动推进门禁」
