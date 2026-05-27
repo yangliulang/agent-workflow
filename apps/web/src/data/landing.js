@@ -94,6 +94,7 @@ export const ROLES = [
 
 export const COMMANDS = [
   { skill: '/pipeline-next', feat: '功能 ID', note: '按 status 自动选任务' },
+  { skill: '/pipeline-skip', feat: '功能 ID', note: '跳过 skips 中不适用步骤' },
   { skill: '/pipeline-product-plan', feat: '—', note: '阶段规划 + sync-backlog' },
   { skill: '/pipeline-product-phase-close', feat: '—', note: '阶段收束 → inventory §2' },
   { skill: '/pipeline-product-contract', feat: '功能 ID', note: '建包定稿' },
@@ -393,6 +394,10 @@ export const FAQ = [
   {
     q: 'product.plan 会自动更新 backlog.yaml 吗？',
     a: '会。plan 完成后须运行 ./scripts/sync-backlog-from-phase.sh（已写入 product.plan 任务步骤）：phase 表 planned → backlog in_phase，done → done，不降级已有 done。',
+  },
+  {
+    q: '功能没有页面，还要走前端/E2E/设计吗？',
+    a: '不必。定稿时在 status.yaml 设 skips: [frontend.integrate, test.e2e, designer.review]（coverage 含页面=否时 product.contract 会写入）。API 测完后 Hook 提醒 /pipeline-skip，直接推进到 ui_reviewed 再 product.accept。',
   },
 ];
 

@@ -8,6 +8,9 @@ artifacts:
   api: api.openapi.yaml
   test_coverage: test/coverage.md
 blockers: []
+# 可跳过步骤（定稿时按 test/coverage「含页面」等填写；任务键见 handoff/WORKFLOW.md）
+# 例：无 UI → [frontend.integrate, test.e2e, designer.review]
+skips: []
 history:
   - at: "2026-05-25T00:00:00+08:00"
     phase: planned

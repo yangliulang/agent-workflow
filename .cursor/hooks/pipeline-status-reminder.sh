@@ -201,8 +201,30 @@ case "$TASK_KEY" in
   designer.rereview) SKILL="pipeline-designer-rereview" ;;
 esac
 
+SKIP_HINT=""
+if command -v ruby >/dev/null 2>&1 && [ -f "$ROOT/scripts/lib/pipeline-skip-check.rb" ]; then
+  SKIP_JSON="$(ruby "$ROOT/scripts/lib/pipeline-skip-check.rb" "$STATUS_FILE" --json 2>/dev/null || true)"
+  if [ -n "$SKIP_JSON" ]; then
+    SHOULD_SKIP="$(printf '%s' "$SKIP_JSON" | python3 -c 'import json,sys; print("true" if json.load(sys.stdin).get("should_skip") else "false")' 2>/dev/null || echo "false")"
+    if [ "$SHOULD_SKIP" = "true" ]; then
+      SKIP_TASK="$(printf '%s' "$SKIP_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("task",""))' 2>/dev/null || true)"
+      TARGET_PHASE="$(printf '%s' "$SKIP_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("target_phase",""))' 2>/dev/null || true)"
+      if [ -n "$TASK_KEY" ] && [ "$TASK_KEY" = "$SKIP_TASK" ]; then
+        SKILL=""
+      fi
+      SKIP_HINT="【跳过】本功能 \`skips\` 含 \`${SKIP_TASK}\`，**勿**执行对应角色任务；请**新开 Chat** 运行 \`/pipeline-skip ${FEATURE_ID}\` 推进至 \`phase: ${TARGET_PHASE}\`。"
+    fi
+  fi
+fi
+
 MSG=""
-if [ -n "$SKILL" ]; then
+if [ -n "$SKIP_HINT" ]; then
+  MSG="$SKIP_HINT"
+  if [ -n "$SKILL" ]; then
+    CMD="/${SKILL} ${FEATURE_ID}"
+    MSG="${MSG}（若已手动跳过，可执行 \`${CMD}\`。）"
+  fi
+elif [ -n "$SKILL" ]; then
   CMD="/${SKILL} ${FEATURE_ID}"
   MSG="【流水线】\`${FEATURE_ID}\` 当前 \`phase: ${PHASE}\`，\`next: ${NEXT}\`。请**新开 Chat** 执行：\`${CMD}\`（或 \`/pipeline-next ${FEATURE_ID}\`）。"
   if $HAS_BLOCKERS; then

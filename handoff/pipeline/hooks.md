@@ -45,7 +45,8 @@
 /pipeline-backend 2026-05-25--greeting
 ```
 
-- `phase: done` 或 `next: null`（空）→ 若当前 roadmap 阶段**全部 done**，提醒 `/pipeline-product-phase-close`；否则通常不注入（下一项由 `product.accept` 或指挥官按 roadmap 开 Chat）
+- `phase: done` 或 `next: null`（空）→ 若当前 roadmap 阶段**全部 done**，提醒 `/pipeline-product-phase-close`；否则通常不注入
+- 若 `status.yaml` 的 `skips` 含下一正向步骤 → 提醒 `/pipeline-skip <功能ID>`，**勿**建议已跳过的角色 Skill（下一项由 `product.accept` 或指挥官按 roadmap 开 Chat）
 - `contract_ready` + `backend-agent` → 额外提示可选 `test-prepare`、`frontend-mock`
 - 无法映射 → 建议 `/pipeline-next <功能ID>`
 

@@ -82,6 +82,7 @@ artifacts:                       # 关键产物路径（相对本功能目录）
   brief: brief.md
   api: api.openapi.yaml
 blockers: []                     # 阻塞项；E2E/API 失败时写入，owner 与 next 对齐
+skips: []                        # 可跳过正向步骤：frontend.integrate | test.e2e | designer.review（定稿时声明）
 history:                         # 流转记录（每次变更 append）
   - at: "2026-05-25T10:00:00+08:00"
     phase: planned

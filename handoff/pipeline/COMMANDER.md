@@ -113,6 +113,19 @@ cat handoff/features/2026-05-25--xxx/status.yaml
 
 确认 `next` 与上表一致再开对应 Chat。
 
+### API-only / 无页面（skips）
+
+定稿时在 `status.yaml` 声明可跳过步骤（通常 `test/coverage.md` 含页面=否）：
+
+```yaml
+skips: [frontend.integrate, test.e2e, designer.review]
+```
+
+主路径变为：**backend → test.api → `/pipeline-skip` → product.accept**（跳过步 4–6）。  
+Hook 在步 3 完成后会提醒 **勿**开 frontend Chat，应执行 `/pipeline-skip <功能ID>`。
+
+仅跳过设计走查时：`skips: [designer.review]`（步 5 后、步 6 前执行 skip）。
+
 ---
 
 ## 4. 返工分支（失败时再开 Chat）

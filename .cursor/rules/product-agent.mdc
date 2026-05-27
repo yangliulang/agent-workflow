@@ -58,6 +58,8 @@ alwaysApply: false
 
 **门禁**：无 brief、无 AC、无 OpenAPI、无 coverage 矩阵、覆盖脚本未通过时，禁止 `contract_ready`。
 
+**skips（可选）**：`test/coverage.md` 标「含页面：否」时，在 `status.yaml` 写入 `skips: [frontend.integrate, test.e2e, designer.review]`；流水线 Hook 会在对应门禁提醒 `/pipeline-skip`，无需假跑前端/E2E/设计。
+
 **一次只定稿一个功能**：按 roadmap 优先级从高到低，避免同时开多个 `contract_ready`。
 
 ### 模式 3：验收（ui_reviewed → done）

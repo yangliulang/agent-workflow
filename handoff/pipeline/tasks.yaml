@@ -61,6 +61,8 @@ tasks:
       可选 design/ui-review.md 骨架。
       定稿前对照 handoff/pipeline/checklists/contract-test-coverage.md；
       运行 ./scripts/check-test-coverage.sh {{feature_dir}}，退出码非 0 则禁止 contract_ready。
+      读 test/coverage.md「含页面」：若为**否**，在 status.yaml 设置
+      \`skips: [frontend.integrate, test.e2e, designer.review]\`（API-only，无需前端/E2E/设计走查）。
       通过后再更新 status.yaml → contract_ready，next: backend-agent；同步 roadmap 状态。
 
   product.accept:
@@ -107,6 +109,7 @@ tasks:
       处理 {{feature_dir}}，phase 为 backend_done，next 为 test-agent。
       启动后端，执行 test/cases.md 全部 P0，填写 test/report.md。
       P0 全通过 → tested，next: frontend-agent。
+      若 status.yaml 的 skips 含 frontend.integrate，在回复中提醒指挥官 `/pipeline-skip {{feat}}`，勿进入前端 Chat。
       P0 失败 → phase 保持 backend_done，blockers + report，next: backend-agent。
 
   test.e2e:
@@ -187,6 +190,17 @@ tasks:
     steps: |
       你是 designer-agent。处理 {{feature_dir}}，phase 为 e2e_verified，next 为 designer-agent，blockers 为空。
       复走查 P0 项，更新 design/ui-review.md，通过 → ui_reviewed，next: product-agent。
+
+  pipeline.skip:
+    agent: product-agent
+    title: 跳过不适用角色步骤
+    requires_next: null
+    steps: |
+      读取 {{feature_dir}}/status.yaml 的 skips 与当前 phase/next。
+      运行 `./scripts/pipeline-skip-check.sh {{feature_dir}}`；退出码 0 表示当前门禁应跳过。
+      确认后运行 `./scripts/pipeline-skip.sh {{feature_dir}}`（可先 --dry-run）。
+      脚本仅更新 status.yaml 至下一适用门禁（如 API-only → ui_reviewed）；**不**代替各角色交付物。
+      若 skips 与 phase 不一致，说明原因并建议指挥官调整 skips 或改走对应 Skill。
 
 # status.yaml 的 next → 默认任务（供 pipeline-next 使用）
 next_task_map:
